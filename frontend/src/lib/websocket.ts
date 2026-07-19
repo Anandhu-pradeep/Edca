@@ -22,7 +22,7 @@ class WebSocketClient {
 
   constructor() {
     // Native WebSocket config (NO STOMP/SockJS)
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = process.env.NEXT_PUBLIC_WS_HOST || 'localhost:8080';
     this.url = `${protocol}//${host}/ws/v1/events`;
   }
