@@ -12,8 +12,8 @@ import { axiosInstance } from '@/lib/axios';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import letterAnimation from '../../../public/letter.json';
-import copyAnimation from '../../../public/Copy_aTFgMqI0mo.json';
+import letterAnimation from '@/assets/animations/letter.json';
+import copyAnimation from '@/assets/animations/Copy_aTFgMqI0mo.json';
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
