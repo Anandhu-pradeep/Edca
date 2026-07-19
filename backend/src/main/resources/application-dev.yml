@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    show-sql: true # Helpful for development
+
+  flyway:
+    url: ${spring.datasource.url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}

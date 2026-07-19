@@ -1,0 +1,8 @@
+com\arcade\backend\common\exception\BadRequestException.class
+com\arcade\backend\common\exception\ForbiddenException.class
+com\arcade\backend\BackendApplication.class
+com\arcade\backend\common\exception\ResourceNotFoundException.class
+com\arcade\backend\common\exception\UnauthorizedException.class
+com\arcade\backend\common\exception\ErrorResponse.class
+com\arcade\backend\config\OpenApiConfig.class
+com\arcade\backend\common\exception\GlobalExceptionHandler.class

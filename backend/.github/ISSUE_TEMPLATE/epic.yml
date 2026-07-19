@@ -1,0 +1,25 @@
+name: "🚀 Epic"
+description: Represents a large goal or feature.
+title: "[Epic]: "
+labels: ["epic"]
+body:
+  - type: input
+    id: epic_title
+    attributes:
+      label: Epic Title
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description & Goal
+      description: What are we trying to achieve?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: How do we know it's done?
+    validations:
+      required: false

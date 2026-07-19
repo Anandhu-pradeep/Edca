@@ -1,0 +1,35 @@
+name: "✅ Task"
+description: An actionable piece of work.
+title: "[Task]: "
+labels: ["task"]
+body:
+  - type: input
+    id: task_title
+    attributes:
+      label: Task Title
+    validations:
+      required: true
+  - type: input
+    id: parent_epic
+    attributes:
+      label: Parent Epic (Optional)
+      description: Link to the parent Epic if applicable.
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What needs to be done?
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: false
