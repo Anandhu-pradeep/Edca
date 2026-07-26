@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, ArrowLeft, Loader2, User, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Loader2, User, Eye, EyeOff, CheckCircle, CheckCircle2, Circle, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -93,15 +94,29 @@ export default function SignPage() {
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  const regPassword = registerDetailsForm.watch('password') || '';
+  const hasLength = regPassword.length >= 8;
+  const hasUpper = /[A-Z]/.test(regPassword);
+  const hasLower = /[a-z]/.test(regPassword);
+  const hasNumber = /[0-9]/.test(regPassword);
+  const hasSpecial = /[^A-Za-z0-9]/.test(regPassword);
+  const passedCount = [hasLength, hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
+
   if (!mounted) return null;
 
   const onLogin = async (data: LoginFormValues) => {
     setApiError(null);
     try {
-      const response = await axiosInstance.post('/auth/login', data);
-      const { accessToken } = response.data.data;
-      setAuth({ id: 'stub', email: data.email, firstName: 'User', lastName: 'Name', roles: [], permissions: [] }, accessToken);
-      router.push('/dashboard');
+      const cleanEmail = data.email.trim().toLowerCase();
+      const response = await axiosInstance.post('/auth/login', { ...data, email: cleanEmail });
+      const { accessToken, user: backendUser } = response.data.data;
+      const onboarded = Boolean(backendUser?.isOnboarded);
+      setAuth(backendUser, accessToken);
+      if (!onboarded) {
+        router.push('/onboarding');
+      } else {
+        router.push('/');
+      }
     } catch (error: any) {
       setApiError(error.response?.data?.message || 'Invalid email or password');
     }
@@ -110,8 +125,9 @@ export default function SignPage() {
   const onRegisterEmail = async (data: RegisterEmailValues) => {
     setApiError(null);
     try {
-      await axiosInstance.post('/auth/register/send-otp', { email: data.email });
-      setRegisteredEmail(data.email);
+      const cleanEmail = data.email.trim().toLowerCase();
+      await axiosInstance.post('/auth/register/send-otp', { email: cleanEmail });
+      setRegisteredEmail(cleanEmail);
       setCountdown(60);
       setView('register-otp');
     } catch (error: any) {
@@ -151,6 +167,12 @@ export default function SignPage() {
         lastName: data.lastName,
         password: data.password
       });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`edca_profile_${registeredEmail}`, JSON.stringify({
+          firstName: data.firstName,
+          lastName: data.lastName
+        }));
+      }
       setView('register-success');
       setTimeout(() => {
         setView('login');
@@ -245,13 +267,7 @@ export default function SignPage() {
                     </div>
                   </div>
 
-                  <div className="mt-6 flex gap-4">
-                    <Button variant="outline" className="w-full py-6 rounded-full border-border hover:bg-background transition-colors">
-                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z" />
-                      </svg>
-                      Github
-                    </Button>
+                  <div className="mt-6">
                     <Button 
                       variant="outline" 
                       className="w-full py-6 rounded-full border-border hover:bg-background transition-colors"
@@ -388,14 +404,14 @@ export default function SignPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     <label className="text-xs font-semibold text-foreground/60 uppercase tracking-wider ml-1">Password</label>
                     <div className="relative">
                       <input 
                         type={showRegisterPassword ? "text" : "password"}
                         {...registerDetailsForm.register('password')}
                         placeholder="Create a password"
-                        className="w-full bg-transparent border-b-2 border-border focus:border-primary text-foreground text-sm py-2 px-1 pr-10 outline-none transition-colors placeholder:text-foreground/30"
+                        className="w-full bg-transparent border-b-2 border-border focus:border-primary text-foreground text-sm py-2 px-1 pr-10 outline-none transition-colors placeholder:text-foreground/30 font-mono"
                       />
                       <button
                         type="button"
@@ -405,6 +421,73 @@ export default function SignPage() {
                         {showRegisterPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+
+                    {/* Live Password Validation Meter & Checklist */}
+                    {regPassword.length > 0 && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="pt-2 space-y-3 bg-secondary/30 p-3.5 rounded-2xl border border-border/50"
+                      >
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-muted-foreground flex items-center gap-1.5">
+                            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                            <span>Security Strength</span>
+                          </span>
+                          <span className={cn(
+                            "font-bold text-[11px] uppercase tracking-wider px-2 py-0.5 rounded-full border",
+                            passedCount <= 2 ? "text-destructive bg-destructive/10 border-destructive/20" :
+                            passedCount === 3 ? "text-amber-500 bg-amber-500/10 border-amber-500/20" :
+                            passedCount === 4 ? "text-blue-500 bg-blue-500/10 border-blue-500/20" : "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
+                          )}>
+                            {passedCount <= 2 ? "Weak" :
+                             passedCount === 3 ? "Fair" :
+                             passedCount === 4 ? "Good" : "Optimal"}
+                          </span>
+                        </div>
+                        
+                        {/* 5-segment strength progress bar */}
+                        <div className="grid grid-cols-5 gap-1.5 h-1.5 w-full bg-secondary rounded-full overflow-hidden p-0.5">
+                          {[1, 2, 3, 4, 5].map((idx) => (
+                            <div 
+                              key={idx}
+                              className={cn(
+                                "h-full rounded-full transition-all duration-300",
+                                passedCount >= idx ? (
+                                  passedCount <= 2 ? "bg-destructive" :
+                                  passedCount === 3 ? "bg-amber-500" :
+                                  passedCount === 4 ? "bg-blue-500" : "bg-emerald-500"
+                                ) : "bg-transparent"
+                              )}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Checklist */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                          {[
+                            { label: "8+ characters", met: hasLength },
+                            { label: "1 uppercase (A-Z)", met: hasUpper },
+                            { label: "1 lowercase (a-z)", met: hasLower },
+                            { label: "1 number (0-9)", met: hasNumber },
+                            { label: "1 special char (!@#$)", met: hasSpecial }
+                          ].map((req, i) => (
+                            <div key={i} className={cn(
+                              "flex items-center gap-2 text-xs font-medium transition-colors duration-200",
+                              req.met ? "text-emerald-500" : "text-muted-foreground/80"
+                            )}>
+                              {req.met ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                              ) : (
+                                <Circle className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                              )}
+                              <span className={cn(req.met && "font-semibold")}>{req.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+
                     {registerDetailsForm.formState.errors.password && (
                       <p className="text-xs text-destructive mt-1">{registerDetailsForm.formState.errors.password.message}</p>
                     )}
@@ -523,13 +606,7 @@ export default function SignPage() {
                     </div>
                   </div>
 
-                  <div className="mt-6 flex gap-4">
-                    <Button variant="outline" className="w-full py-6 rounded-full border-border hover:bg-background transition-colors">
-                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z" />
-                      </svg>
-                      Github
-                    </Button>
+                  <div className="mt-6">
                     <Button 
                       variant="outline" 
                       className="w-full py-6 rounded-full border-border hover:bg-background transition-colors"

@@ -1,12 +1,26 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
   roles: string[];
   permissions: string[];
+  isOnboarded?: boolean;
+  username?: string;
+  avatar?: string;
+  phone?: string;
+  location?: string;
+  gender?: string;
+  college?: string;
+  degree?: string;
+  gradYear?: string;
+  targetRole?: string;
+  experienceLevel?: string;
+  techStack?: string[];
+  resumeName?: string;
 }
 
 interface AuthState {
@@ -20,20 +34,25 @@ interface AuthState {
   setAccessToken: (token: string) => void;
   logout: () => void;
   setInitializing: (val: boolean) => void;
+  setOnboarded: (val: boolean, profileData?: Partial<User>) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  accessToken: null,
-  isAuthenticated: false,
-  isInitializing: true, // Used for the initial page load to check if user has active session
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      accessToken: null,
+      isAuthenticated: false,
+      isInitializing: true, // Starts true until onRehydrateStorage completes
 
-  setAuth: (user, accessToken) => set({ 
-    user, 
-    accessToken, 
-    isAuthenticated: true,
-    isInitializing: false
-  }),
+  setAuth: (user, accessToken) => {
+    set({ 
+      user: { ...user }, 
+      accessToken, 
+      isAuthenticated: true,
+      isInitializing: false
+    });
+  },
 
   setAccessToken: (token) => set((state) => ({
     ...state,
@@ -42,11 +61,26 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     set({ user: null, accessToken: null, isAuthenticated: false });
-    // In a real app, this should also clear any WebSockets or redirect the user
     if (typeof window !== 'undefined') {
       window.location.href = '/sign?view=login';
     }
   },
 
-  setInitializing: (val) => set({ isInitializing: val })
-}));
+  setInitializing: (val) => set({ isInitializing: val }),
+
+  setOnboarded: (val, profileData) => set((state) => {
+    const updatedUser = state.user ? { ...state.user, isOnboarded: val, ...profileData } : null;
+    return { ...state, user: updatedUser };
+  })
+    }),
+    {
+      name: 'edca_auth_session',
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isInitializing = false;
+        }
+      },
+    }
+  )
+);
+

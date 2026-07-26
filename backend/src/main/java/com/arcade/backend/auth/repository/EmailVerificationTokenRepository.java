@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface EmailVerificationTokenRepository extends JpaRepository<EmailVerificationToken, UUID> {
-    Optional<EmailVerificationToken> findByTokenHash(String tokenHash);
-    Optional<EmailVerificationToken> findByUser(com.arcade.backend.user.User user);
+public interface EmailVerificationTokenRepository
+    extends JpaRepository<EmailVerificationToken, UUID> {
+  Optional<EmailVerificationToken> findByTokenHash(String tokenHash);
+
+  Optional<EmailVerificationToken> findByUser(com.arcade.backend.user.User user);
 }

@@ -13,15 +13,19 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
-    @Value("${app.oauth2.authorized-redirect-uris:http://localhost:3000/sign}")
-    private String redirectUri;
+  @Value("${app.oauth2.authorized-redirect-uris:http://localhost:3000/sign}")
+  private String redirectUri;
 
-    @Override
-    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-        String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("error", exception.getLocalizedMessage())
-                .build().toUriString();
+  @Override
+  public void onAuthenticationFailure(
+      HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
+      throws IOException, ServletException {
+    String targetUrl =
+        UriComponentsBuilder.fromUriString(redirectUri)
+            .queryParam("error", exception.getLocalizedMessage())
+            .build()
+            .toUriString();
 
-        getRedirectStrategy().sendRedirect(request, response, targetUrl);
-    }
+    getRedirectStrategy().sendRedirect(request, response, targetUrl);
+  }
 }

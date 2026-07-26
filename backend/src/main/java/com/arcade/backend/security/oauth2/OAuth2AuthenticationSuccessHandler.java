@@ -22,47 +22,59 @@ import org.springframework.web.util.UriComponentsBuilder;
 @RequiredArgsConstructor
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private final JwtService jwtService;
-    private final RefreshTokenService refreshTokenService;
-    private final SessionService sessionService;
-    private final AuditService auditService;
+  private final JwtService jwtService;
+  private final RefreshTokenService refreshTokenService;
+  private final SessionService sessionService;
+  private final AuditService auditService;
+  private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
-    @Value("${app.oauth2.authorized-redirect-uris:http://localhost:3000/oauth2/redirect}")
-    private String redirectUri;
+  @Value("${app.oauth2.authorized-redirect-uris:http://localhost:3000/oauth2/redirect}")
+  private String redirectUri;
 
-    @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        
-        String targetUrl = determineTargetUrl(request, response, authentication);
+  @Override
+  public void onAuthenticationSuccess(
+      HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+      throws IOException, ServletException {
 
-        if (response.isCommitted()) {
-            logger.debug("Response has already been committed. Unable to redirect to " + targetUrl);
-            return;
-        }
+    String targetUrl = determineTargetUrl(request, response, authentication);
 
-        getRedirectStrategy().sendRedirect(request, response, targetUrl);
+    if (response.isCommitted()) {
+      logger.debug("Response has already been committed. Unable to redirect to " + targetUrl);
+      return;
     }
 
-    @Override
-    protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
-        CustomOAuth2User oauth2User = (CustomOAuth2User) authentication.getPrincipal();
-        User user = oauth2User.getDbUser();
-        
-        CustomUserDetails userDetails = new CustomUserDetails(user);
-        String accessToken = jwtService.generateToken(userDetails);
+    httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
+    getRedirectStrategy().sendRedirect(request, response, targetUrl);
+  }
 
-        String ipAddress = request.getRemoteAddr();
-        String userAgent = request.getHeader("User-Agent");
-        UUID familyId = UUID.randomUUID();
-        
-        String rawRefreshToken = refreshTokenService.createRefreshToken(user, familyId, ipAddress);
-        sessionService.createSession(user, familyId, ipAddress, userAgent);
-        
-        auditService.logSecurityEvent(user, "LOGIN_SUCCESS_OAUTH2", "User logged in via Google", ipAddress);
+  @Override
+  protected String determineTargetUrl(
+      HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+    CustomOAuth2User oauth2User = (CustomOAuth2User) authentication.getPrincipal();
+    User user = oauth2User.getDbUser();
 
-        return UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("token", accessToken)
-                .queryParam("refreshToken", rawRefreshToken)
-                .build().toUriString();
+    CustomUserDetails userDetails = new CustomUserDetails(user);
+    String accessToken = jwtService.generateToken(userDetails);
+
+    String ipAddress = request.getRemoteAddr();
+    String userAgent = request.getHeader("User-Agent");
+    UUID familyId = UUID.randomUUID();
+
+    String rawRefreshToken = refreshTokenService.createRefreshToken(user, familyId, ipAddress);
+    sessionService.createSession(user, familyId, ipAddress, userAgent);
+
+    auditService.logSecurityEvent(
+        user, "LOGIN_SUCCESS_OAUTH2", "User logged in via Google", ipAddress);
+
+    String targetRedirectUri = redirectUri;
+    if ("http://localhost:3000".equals(targetRedirectUri) || "http://localhost:3000/".equals(targetRedirectUri)) {
+      targetRedirectUri = "http://localhost:3000/oauth2/redirect";
     }
+
+    return UriComponentsBuilder.fromUriString(targetRedirectUri)
+        .queryParam("token", accessToken)
+        .queryParam("refreshToken", rawRefreshToken)
+        .build()
+        .toUriString();
+  }
 }

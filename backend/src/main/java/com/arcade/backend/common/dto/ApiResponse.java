@@ -9,11 +9,10 @@ import lombok.Setter;
 @Setter
 @Builder
 public class ApiResponse<T> {
-    @Builder.Default
-    private ZonedDateTime timestamp = ZonedDateTime.now();
-    private int status;
-    private String code;
-    private String message;
-    private String path;
-    private T data;
+  @Builder.Default private ZonedDateTime timestamp = ZonedDateTime.now();
+  private int status;
+  private String code;
+  private String message;
+  private String path;
+  private T data;
 }

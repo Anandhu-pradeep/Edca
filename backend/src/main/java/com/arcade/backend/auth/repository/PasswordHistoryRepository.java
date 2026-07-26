@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PasswordHistoryRepository extends JpaRepository<PasswordHistory, UUID> {
-    List<PasswordHistory> findTop5ByUserIdOrderByCreatedAtDesc(UUID userId);
+  List<PasswordHistory> findTop5ByUserIdOrderByCreatedAtDesc(UUID userId);
 }

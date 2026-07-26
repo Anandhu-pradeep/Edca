@@ -17,46 +17,64 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+  private final UserRepository userRepository;
+  private final RoleRepository roleRepository;
 
-    @Override
-    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2User oauth2User = super.loadUser(userRequest);
+  @Override
+  public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+    OAuth2User oauth2User = super.loadUser(userRequest);
 
-        String email = oauth2User.getAttribute("email");
-        if (email == null) {
-            throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
-        }
-
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        User user;
-
-        if (userOptional.isPresent()) {
-            user = userOptional.get();
-            // Update auth provider if needed
-            if (!"GOOGLE".equals(user.getAuthProvider())) {
-                user.setAuthProvider("GOOGLE");
-                user.setAuthProviderId(oauth2User.getAttribute("sub"));
-                userRepository.save(user);
-            }
-        } else {
-            Role userRole = roleRepository.findByName("ROLE_USER")
-                    .orElseThrow(() -> new IllegalStateException("Default role not found"));
-            
-            user = User.builder()
-                    .email(email)
-                    .firstName(oauth2User.getAttribute("given_name"))
-                    .lastName(oauth2User.getAttribute("family_name"))
-                    .isEmailVerified(true)
-                    .authProvider("GOOGLE")
-                    .authProviderId(oauth2User.getAttribute("sub"))
-                    .roles(new HashSet<>())
-                    .build();
-            user.getRoles().add(userRole);
-            user = userRepository.save(user);
-        }
-
-        return new CustomOAuth2User(oauth2User, user);
+    String email = oauth2User.getAttribute("email");
+    if (email == null) {
+      throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
     }
+
+    Optional<User> userOptional = userRepository.findByEmail(email);
+    User user;
+
+    if (userOptional.isPresent()) {
+      user = userOptional.get();
+      boolean changed = false;
+      if (!"GOOGLE".equals(user.getAuthProvider())) {
+        user.setAuthProvider("GOOGLE");
+        user.setAuthProviderId(oauth2User.getAttribute("sub"));
+        changed = true;
+      }
+      String picture = oauth2User.getAttribute("picture");
+      if (picture != null && !picture.equals(user.getAvatar())) {
+        user.setAvatar(picture);
+        changed = true;
+      }
+      if (changed) {
+        userRepository.save(user);
+      }
+    } else {
+      Role userRole =
+          roleRepository
+              .findByName("ROLE_USER")
+              .orElseGet(
+                  () ->
+                      roleRepository.save(
+                          Role.builder()
+                              .name("ROLE_USER")
+                              .description("Standard user role")
+                              .build()));
+
+      user =
+          User.builder()
+              .email(email)
+              .firstName(oauth2User.getAttribute("given_name"))
+              .lastName(oauth2User.getAttribute("family_name"))
+              .avatar(oauth2User.getAttribute("picture"))
+              .isEmailVerified(true)
+              .authProvider("GOOGLE")
+              .authProviderId(oauth2User.getAttribute("sub"))
+              .roles(new HashSet<>())
+              .build();
+      user.getRoles().add(userRole);
+      user = userRepository.save(user);
+    }
+
+    return new CustomOAuth2User(oauth2User, user);
+  }
 }

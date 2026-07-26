@@ -16,22 +16,26 @@ import org.springframework.stereotype.Component;
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) 
-            throws IOException, ServletException {
-        
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+  @Override
+  public void commence(
+      HttpServletRequest request,
+      HttpServletResponse response,
+      AuthenticationException authException)
+      throws IOException, ServletException {
 
-        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
-                .status(HttpStatus.UNAUTHORIZED.value())
-                .code("UNAUTHORIZED")
-                .message("Full authentication is required to access this resource.")
-                .path(request.getRequestURI())
-                .build();
+    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.writeValue(response.getOutputStream(), apiResponse);
-    }
+    ApiResponse<Void> apiResponse =
+        ApiResponse.<Void>builder()
+            .status(HttpStatus.UNAUTHORIZED.value())
+            .code("UNAUTHORIZED")
+            .message("Full authentication is required to access this resource.")
+            .path(request.getRequestURI())
+            .build();
+
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(new JavaTimeModule());
+    mapper.writeValue(response.getOutputStream(), apiResponse);
+  }
 }

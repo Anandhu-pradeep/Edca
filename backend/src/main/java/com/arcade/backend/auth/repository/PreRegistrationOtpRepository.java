@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PreRegistrationOtpRepository extends JpaRepository<PreRegistrationOtp, UUID> {
-    Optional<PreRegistrationOtp> findByEmail(String email);
+  Optional<PreRegistrationOtp> findByEmail(String email);
 }

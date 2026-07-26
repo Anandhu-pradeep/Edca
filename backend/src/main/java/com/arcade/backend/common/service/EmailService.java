@@ -12,21 +12,22 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+  private final JavaMailSender mailSender;
 
-    @Async
-    public void sendEmail(String to, String subject, String body) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(body);
-            // message.setFrom() can be set if needed, but Google automatically sets it to your Gmail address
+  @Async
+  public void sendEmail(String to, String subject, String body) {
+    try {
+      SimpleMailMessage message = new SimpleMailMessage();
+      message.setTo(to);
+      message.setSubject(subject);
+      message.setText(body);
+      // message.setFrom() can be set if needed, but Google automatically sets it to your Gmail
+      // address
 
-            mailSender.send(message);
-            log.info("Email successfully sent to {}", to);
-        } catch (Exception e) {
-            log.error("Failed to send email to {}", to, e);
-        }
+      mailSender.send(message);
+      log.info("Email successfully sent to {}", to);
+    } catch (Exception e) {
+      log.error("Failed to send email to {}", to, e);
     }
+  }
 }

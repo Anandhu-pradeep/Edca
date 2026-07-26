@@ -15,30 +15,30 @@ import lombok.*;
 @Builder
 public class AuditLog {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id")
+  private User user;
 
-    @Column(nullable = false, length = 100)
-    private String action;
+  @Column(nullable = false, length = 100)
+  private String action;
 
-    @Column(columnDefinition = "TEXT")
-    private String details;
+  @Column(columnDefinition = "TEXT")
+  private String details;
 
-    @Column(name = "ip_address", length = 45)
-    private String ipAddress;
+  @Column(name = "ip_address", length = 45)
+  private String ipAddress;
 
-    @Column(name = "created_at", updatable = false)
-    private ZonedDateTime createdAt;
+  @Column(name = "created_at", updatable = false)
+  private ZonedDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = ZonedDateTime.now();
-        }
+  @PrePersist
+  protected void onCreate() {
+    if (createdAt == null) {
+      createdAt = ZonedDateTime.now();
     }
+  }
 }

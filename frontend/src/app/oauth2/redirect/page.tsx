@@ -32,13 +32,13 @@ function OAuth2RedirectHandler() {
         headers: { Authorization: `Bearer ${token}` }
       }).then(response => {
         const userData = response.data.data;
+        const onboarded = Boolean(userData?.isOnboarded);
         setAuth(userData, token);
-        router.push('/dashboard');
+        router.push(onboarded ? '/' : '/onboarding');
       }).catch(err => {
         console.error("Failed to fetch user data", err);
-        // Fallback stub if /users/me is not implemented yet
-        setAuth({ id: 'oauth', email: 'user@gmail.com', firstName: 'Google', lastName: 'User', roles: [], permissions: [] }, token);
-        router.push('/dashboard');
+        setError("Failed to verify user profile from backend. Please try again.");
+        setTimeout(() => router.push('/sign'), 3000);
       });
       
     } else {

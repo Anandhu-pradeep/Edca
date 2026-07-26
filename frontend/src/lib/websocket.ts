@@ -120,12 +120,12 @@ class WebSocketClient {
   }
 
   private handleError(error: Event) {
-    console.error('[WebSocket] Error occurred', error);
+    console.warn('[WebSocket] Connection offline (Backend server unreachable on port 8080)');
   }
 
   private attemptReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('[WebSocket] Max reconnect attempts reached');
+      console.warn('[WebSocket] Max reconnect attempts reached (Running in standalone frontend mode)');
       return;
     }
 

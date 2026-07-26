@@ -16,11 +16,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Setter
 public abstract class BaseEntity {
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private ZonedDateTime createdAt;
+  @CreatedDate
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private ZonedDateTime createdAt;
 
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private ZonedDateTime updatedAt;
+  @LastModifiedDate
+  @Column(name = "updated_at", nullable = false)
+  private ZonedDateTime updatedAt;
 }

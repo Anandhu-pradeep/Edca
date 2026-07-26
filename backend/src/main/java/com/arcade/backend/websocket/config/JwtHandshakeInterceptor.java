@@ -17,45 +17,55 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 @Slf4j
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
-    private final JwtService jwtService;
+  private final JwtService jwtService;
 
-    @Override
-    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-        if (request instanceof ServletServerHttpRequest servletRequest) {
-            HttpServletRequest req = servletRequest.getServletRequest();
-            String authHeader = req.getHeader("Authorization");
-            
-            // Also allow passing token via query param for clients that can't set headers in native WebSocket
-            String queryToken = req.getParameter("token");
-            
-            String token = null;
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                token = authHeader.substring(7);
-            } else if (queryToken != null) {
-                token = queryToken;
-            }
+  @Override
+  public boolean beforeHandshake(
+      ServerHttpRequest request,
+      ServerHttpResponse response,
+      WebSocketHandler wsHandler,
+      Map<String, Object> attributes)
+      throws Exception {
+    if (request instanceof ServletServerHttpRequest servletRequest) {
+      HttpServletRequest req = servletRequest.getServletRequest();
+      String authHeader = req.getHeader("Authorization");
 
-            if (token != null) {
-                try {
-                    String username = jwtService.extractUsername(token);
-                    // In a full implementation we might validate the token fully here with UserDetailsService
-                    // For now, if extractUsername doesn't throw, the signature is valid and it's not expired
-                    if (username != null) {
-                        attributes.put("username", username);
-                        return true;
-                    }
-                } catch (Exception e) {
-                    log.error("WebSocket Handshake failed due to invalid JWT: {}", e.getMessage());
-                    return false;
-                }
-            }
+      // Also allow passing token via query param for clients that can't set headers in native
+      // WebSocket
+      String queryToken = req.getParameter("token");
+
+      String token = null;
+      if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        token = authHeader.substring(7);
+      } else if (queryToken != null) {
+        token = queryToken;
+      }
+
+      if (token != null) {
+        try {
+          String username = jwtService.extractUsername(token);
+          // In a full implementation we might validate the token fully here with UserDetailsService
+          // For now, if extractUsername doesn't throw, the signature is valid and it's not expired
+          if (username != null) {
+            attributes.put("username", username);
+            return true;
+          }
+        } catch (Exception e) {
+          log.error("WebSocket Handshake failed due to invalid JWT: {}", e.getMessage());
+          return false;
         }
-        log.warn("WebSocket Handshake blocked: Missing or invalid token");
-        return false;
+      }
     }
+    log.warn("WebSocket Handshake blocked: Missing or invalid token");
+    return false;
+  }
 
-    @Override
-    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Exception exception) {
-        // No-op
-    }
+  @Override
+  public void afterHandshake(
+      ServerHttpRequest request,
+      ServerHttpResponse response,
+      WebSocketHandler wsHandler,
+      Exception exception) {
+    // No-op
+  }
 }
