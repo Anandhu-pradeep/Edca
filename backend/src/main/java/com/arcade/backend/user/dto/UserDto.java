@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Data
 @Builder
@@ -19,6 +20,7 @@ public class UserDto {
   private String avatar;
   private List<String> roles;
   private List<String> permissions;
+  @JsonProperty("isOnboarded")
   private boolean isOnboarded;
   private String phone;
   private String location;

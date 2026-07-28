@@ -34,7 +34,8 @@ import {
   Target,
   Terminal,
   BrainCircuit,
-  TrendingUp
+  TrendingUp,
+  Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -78,40 +79,65 @@ const AVAILABLE_YEARS = [
   "2030"
 ];
 
-// Available Tech Stack Chips
-const AVAILABLE_SKILLS = [
-  { name: 'React', category: 'Frontend' },
-  { name: 'Next.js', category: 'Frontend' },
-  { name: 'TypeScript', category: 'Frontend' },
-  { name: 'Tailwind CSS', category: 'Frontend' },
-  { name: 'Java', category: 'Backend' },
-  { name: 'Spring Boot', category: 'Backend' },
-  { name: 'Node.js', category: 'Backend' },
-  { name: 'Python', category: 'Backend' },
-  { name: 'GraphQL', category: 'Backend' },
-  { name: 'AWS', category: 'Cloud/DevOps' },
-  { name: 'Docker', category: 'Cloud/DevOps' },
-  { name: 'Kubernetes', category: 'Cloud/DevOps' },
-  { name: 'System Design', category: 'Architecture' },
-  { name: 'Microservices', category: 'Architecture' },
-  { name: 'PostgreSQL', category: 'Database' },
-  { name: 'MongoDB', category: 'Database' },
-  { name: 'Machine Learning', category: 'AI/ML' },
-  { name: 'Data Structures', category: 'Core' },
-  { name: 'Financial Accounting', category: 'Finance/Acct' },
-  { name: 'Auditing & Compliance', category: 'Finance/Acct' },
-  { name: 'Taxation & GST', category: 'Finance/Acct' },
-  { name: 'Financial Modeling', category: 'Finance/Acct' },
-  { name: 'Excel & VBA', category: 'Finance/Acct' },
-  { name: 'VLSI & Embedded C', category: 'Electrical/Core' },
-  { name: 'Circuit & PCB Design', category: 'Electrical/Core' },
-  { name: 'MATLAB & AutoCAD', category: 'Electrical/Core' },
-  { name: 'Power Systems', category: 'Electrical/Core' },
-  { name: 'Project Management', category: 'Business/Mgmt' },
-  { name: 'Agile & Scrum', category: 'Business/Mgmt' },
-  { name: 'Business Strategy', category: 'Business/Mgmt' },
-  { name: 'Data Analysis', category: 'Business/Mgmt' }
+// Available Domains
+const DOMAINS = [
+  { id: 'cs', name: 'Computer Science', icon: '💻', subtitle: 'Programming • Software • Cloud' },
+  { id: 'commerce', name: 'Commerce & Finance', icon: '📊', subtitle: 'Accounting • Taxation • Auditing' },
+  { id: 'mech', name: 'Mechanical Engineering', icon: '⚙️', subtitle: 'CAD • Manufacturing • Design' },
+  { id: 'elec', name: 'Electrical Engineering', icon: '⚡', subtitle: 'Power • Circuits • Automation' },
+  { id: 'civil', name: 'Civil Engineering', icon: '🏗️', subtitle: 'Construction • Structural' },
+  { id: 'ai', name: 'AI & Data Science', icon: '🤖', subtitle: 'Machine Learning • Data Analytics' },
+  { id: 'health', name: 'Healthcare', icon: '🏥', subtitle: 'Clinical • Nursing • Pharmacy' },
+  { id: 'marketing', name: 'Marketing', icon: '📢', subtitle: 'Digital Marketing • SEO • Branding' },
+  { id: 'hr', name: 'Human Resources', icon: '👥', subtitle: 'Recruitment • HR Operations' },
+  { id: 'education', name: 'Education', icon: '📚', subtitle: 'Teaching • Research' },
+  { id: 'law', name: 'Law', icon: '⚖️', subtitle: 'Corporate • Criminal • Civil' },
+  { id: 'custom', name: 'Other', icon: '✨', subtitle: 'Create your own interview' }
 ];
+
+// Available Skills per Domain
+const DOMAIN_SKILLS: Record<string, { category: string; skills: string[] }[]> = {
+  cs: [
+    { category: 'Programming Languages', skills: ['Java', 'Python', 'C++', 'JavaScript', 'Go', 'Rust'] },
+    { category: 'Frontend', skills: ['React', 'Next.js', 'Angular', 'Vue'] },
+    { category: 'Backend', skills: ['Spring Boot', 'Node.js', 'Express', 'Django', 'Laravel'] },
+    { category: 'Database', skills: ['PostgreSQL', 'MongoDB', 'MySQL', 'Redis'] },
+    { category: 'Cloud', skills: ['AWS', 'Azure', 'Docker', 'Kubernetes'] },
+    { category: 'Architecture', skills: ['System Design', 'Microservices', 'REST API', 'GraphQL'] }
+  ],
+  commerce: [
+    { category: 'Accounting', skills: ['Financial Accounting', 'Cost Accounting', 'GST', 'Taxation', 'Auditing', 'Tally'] },
+    { category: 'Finance', skills: ['Investment', 'Financial Modeling', 'Corporate Finance', 'Banking'] }
+  ],
+  mech: [
+    { category: 'Core', skills: ['AutoCAD', 'SolidWorks', 'CATIA', 'Manufacturing', 'Thermodynamics'] }
+  ],
+  elec: [
+    { category: 'Core', skills: ['Power Systems', 'PLC', 'SCADA', 'MATLAB', 'Embedded Systems'] }
+  ],
+  civil: [
+    { category: 'Core', skills: ['Construction', 'Structural Analysis', 'AutoCAD Civil', 'Surveying'] }
+  ],
+  ai: [
+    { category: 'Core', skills: ['Machine Learning', 'Data Analytics', 'Deep Learning', 'NLP', 'Computer Vision'] }
+  ],
+  health: [
+    { category: 'Core', skills: ['Patient Care', 'Pharmacology', 'Medical Coding', 'Clinical Research'] }
+  ],
+  marketing: [
+    { category: 'Core', skills: ['SEO', 'Google Ads', 'Brand Strategy', 'Content Marketing'] }
+  ],
+  hr: [
+    { category: 'Core', skills: ['Talent Acquisition', 'Payroll', 'Performance Management'] }
+  ],
+  education: [
+    { category: 'Core', skills: ['Teaching', 'Curriculum Design', 'Assessment'] }
+  ],
+  law: [
+    { category: 'Core', skills: ['Corporate Law', 'Constitutional Law', 'Civil Law'] }
+  ],
+  custom: []
+};
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -121,6 +147,12 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<number>(0);
   const [introStage, setIntroStage] = useState<'fade-in' | 'zoom-out'>('fade-in');
   const [showValidationDetails, setShowValidationDetails] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
 
   useEffect(() => {
     setShowValidationDetails(false);
@@ -166,8 +198,11 @@ export default function OnboardingPage() {
   
   const [experienceLevel, setExperienceLevel] = useState<string>('Fresher');
   
-  const [selectedSkills, setSelectedSkills] = useState<string[]>(['React', 'Java', 'Spring Boot', 'System Design']);
-  const [allSkills, setAllSkills] = useState<{ name: string; category: string }[]>(AVAILABLE_SKILLS);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [customAddedSkills, setCustomAddedSkills] = useState<string[]>([]);
+  
   const [isAddingSkill, setIsAddingSkill] = useState<boolean>(false);
   const [newSkillName, setNewSkillName] = useState<string>('');
   
@@ -301,14 +336,32 @@ export default function OnboardingPage() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      simulateResumeScan(e.dataTransfer.files[0]);
+      const file = e.dataTransfer.files[0];
+      if (file.type !== 'application/pdf') {
+        showToast("Please upload a valid PDF file.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("Resume file must be less than 5MB.");
+        return;
+      }
+      simulateResumeScan(file);
     }
   };
 
   // Handle File Input Change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      simulateResumeScan(e.target.files[0]);
+      const file = e.target.files[0];
+      if (file.type !== 'application/pdf') {
+        showToast("Please upload a valid PDF file.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("Resume file must be less than 5MB.");
+        return;
+      }
+      simulateResumeScan(file);
     }
   };
 
@@ -369,8 +422,8 @@ export default function OnboardingPage() {
   const handleAddCustomSkill = () => {
     const trimmed = newSkillName.trim();
     if (!trimmed) return;
-    if (!allSkills.some(s => s.name.toLowerCase() === trimmed.toLowerCase())) {
-      setAllSkills(prev => [...prev, { name: trimmed, category: 'Custom' }]);
+    if (!customAddedSkills.includes(trimmed)) {
+      setCustomAddedSkills(prev => [...prev, trimmed]);
     }
     if (!selectedSkills.includes(trimmed)) {
       setSelectedSkills(prev => [...prev, trimmed]);
@@ -514,6 +567,14 @@ export default function OnboardingPage() {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
+                          if (!file.type.startsWith('image/')) {
+                            showToast("Please upload a valid image file (JPG, PNG).");
+                            return;
+                          }
+                          if (file.size > 2 * 1024 * 1024) {
+                            showToast("Profile picture must be less than 2MB.");
+                            return;
+                          }
                           const reader = new FileReader();
                           reader.onloadend = () => {
                             if (typeof reader.result === 'string') {
@@ -956,7 +1017,7 @@ export default function OnboardingPage() {
             </motion.div>
           )}
 
-          {/* STEP 5: CALIBRATED TECH STACK CHIPS */}
+          {/* STEP 5: DOMAIN & SKILL SELECTION */}
           {step === 5 && (
             <motion.div 
               key="step5"
@@ -964,100 +1025,194 @@ export default function OnboardingPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="py-4 max-w-4xl mx-auto w-full space-y-6"
+              className="py-4 max-w-5xl mx-auto w-full space-y-4"
             >
-              <div className="flex items-center justify-between flex-wrap gap-4 mb-10">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
-                    05
+              {!selectedDomain ? (
+                <>
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
+                      05
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">Choose Your Domain</h2>
+                      <p className="text-sm text-muted-foreground">Select your professional domain to customize your interview experience.</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">Calibrated Tech Stack Chips</h2>
-                    <p className="text-sm text-muted-foreground">Click chips to toggle dynamically. EDCA AI will generate custom mock interviews.</p>
+
+                  <div className="flex flex-wrap justify-center gap-3 pb-8">
+                    {DOMAINS.map((domain) => (
+                      <button
+                        key={domain.id}
+                        type="button"
+                        onClick={() => setSelectedDomain(domain.id)}
+                        className="domain-btn"
+                      >
+                        <span className="btn-txt">{domain.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-6">
+                  {/* Header removed as requested */}
+
+                  <div className="space-y-8 pb-4">
+                    {(() => {
+                      const domainCategories = DOMAIN_SKILLS[selectedDomain] || [];
+                      const lowerQuery = searchQuery.toLowerCase();
+                      
+                      const filteredCategories = domainCategories.map(cat => ({
+                        ...cat,
+                        skills: cat.skills.filter(s => s.toLowerCase().includes(lowerQuery))
+                      })).filter(cat => cat.skills.length > 0);
+                      
+                      const filteredCustom = customAddedSkills.filter(s => s.toLowerCase().includes(lowerQuery));
+
+                      const hasResults = filteredCategories.length > 0 || filteredCustom.length > 0;
+
+                      return (
+                        <>
+                          {filteredCategories.map((cat) => (
+                            <div key={cat.category} className="space-y-3">
+                              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{cat.category}</h3>
+                              <div className="grid grid-cols-[repeat(auto-fit,minmax(120px,max-content))] gap-3">
+                                {cat.skills.map((skill) => {
+                                  const isSelected = selectedSkills.includes(skill);
+                                  return (
+                                    <button
+                                      key={skill}
+                                      type="button"
+                                      onClick={() => toggleSkill(skill)}
+                                      className={cn(
+                                        "domain-btn !w-auto !px-5 !h-11",
+                                        isSelected ? "!bg-foreground !text-background !border-foreground" : ""
+                                      )}
+                                    >
+                                      <span className="btn-txt flex items-center gap-2 font-semibold text-sm">
+                                        {skill}
+                                        {isSelected && <Check className="w-4 h-4 shrink-0" />}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+
+                          {filteredCustom.length > 0 && (
+                            <div className="space-y-3">
+                              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Custom Skills</h3>
+                              <div className="grid grid-cols-[repeat(auto-fit,minmax(120px,max-content))] gap-3">
+                                {filteredCustom.map((skill) => {
+                                  const isSelected = selectedSkills.includes(skill);
+                                  return (
+                                    <button
+                                      key={skill}
+                                      type="button"
+                                      onClick={() => toggleSkill(skill)}
+                                      className={cn(
+                                        "domain-btn !w-auto !px-5 !h-11",
+                                        isSelected ? "!bg-foreground !text-background !border-foreground" : ""
+                                      )}
+                                    >
+                                      <span className="btn-txt flex items-center gap-2 font-semibold text-sm">
+                                        {skill}
+                                        {isSelected && <Check className="w-4 h-4 shrink-0" />}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {!hasResults && searchQuery && (
+                            <div className="text-center py-10 space-y-4">
+                              <p className="text-muted-foreground">No skills found for "{searchQuery}"</p>
+                              <Button
+                                onClick={() => {
+                                  if (!customAddedSkills.includes(searchQuery)) {
+                                    setCustomAddedSkills([...customAddedSkills, searchQuery]);
+                                  }
+                                  if (!selectedSkills.includes(searchQuery)) {
+                                    setSelectedSkills([...selectedSkills, searchQuery]);
+                                  }
+                                  setSearchQuery('');
+                                }}
+                                className="rounded-xl font-bold"
+                              >
+                                + Add "{searchQuery}"
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+
+                    {!searchQuery && (
+                      <div className="pt-4 border-t border-border/30">
+                        {isAddingSkill ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={newSkillName}
+                              onChange={(e) => setNewSkillName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && newSkillName.trim()) {
+                                  const skill = newSkillName.trim();
+                                  if (!customAddedSkills.includes(skill)) setCustomAddedSkills([...customAddedSkills, skill]);
+                                  if (!selectedSkills.includes(skill)) setSelectedSkills([...selectedSkills, skill]);
+                                  setNewSkillName('');
+                                  setIsAddingSkill(false);
+                                }
+                                if (e.key === 'Escape') setIsAddingSkill(false);
+                              }}
+                              placeholder="Type custom skill..."
+                              autoFocus
+                              className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-background border border-primary text-foreground focus:outline-none shadow-sm w-48"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                if (newSkillName.trim()) {
+                                  const skill = newSkillName.trim();
+                                  if (!customAddedSkills.includes(skill)) setCustomAddedSkills([...customAddedSkills, skill]);
+                                  if (!selectedSkills.includes(skill)) setSelectedSkills([...selectedSkills, skill]);
+                                  setNewSkillName('');
+                                  setIsAddingSkill(false);
+                                }
+                              }}
+                              className="rounded-xl h-10 px-4 font-bold"
+                            >
+                              Add
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setIsAddingSkill(false)}
+                              className="rounded-xl h-10 w-10 text-muted-foreground hover:text-foreground"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsAddingSkill(true)}
+                            className="rounded-xl border-dashed border-2 hover:border-primary hover:bg-primary/5 font-semibold text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            + Add Custom Skill
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
+              )}
 
-                <div className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
-                  {selectedSkills.length} Skills Selected
-                </div>
-              </div>
-
-              {/* Centered Tapering Skill Chips Grid */}
-              <div className="flex flex-wrap justify-center gap-2.5 min-h-[200px] content-start py-6 max-w-3xl mx-auto">
-                {allSkills.map((skill) => {
-                  const isSelected = selectedSkills.includes(skill.name);
-                  return (
-                    <motion.button
-                      key={skill.name}
-                      type="button"
-                      whileTap={{ scale: 0.94 }}
-                      whileHover={{ scale: 1.03 }}
-                      onClick={() => toggleSkill(skill.name)}
-                      className={cn(
-                        "px-4 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 border cursor-pointer select-none",
-                        isSelected 
-                          ? "bg-primary text-primary-foreground border-primary shadow-md ring-2 ring-primary" 
-                          : "bg-background/80 border-border/80 text-foreground hover:border-foreground/50 hover:bg-secondary/50"
-                      )}
-                    >
-                      <span className={cn(
-                        "w-2 h-2 rounded-full",
-                        isSelected ? "bg-primary-foreground animate-pulse" : "bg-muted-foreground"
-                      )} />
-                      <span>{skill.name}</span>
-                      {isSelected && <Check className="w-3.5 h-3.5 ml-1" />}
-                    </motion.button>
-                  );
-                })}
-
-                {/* Add Custom Skill Button / Input */}
-                {isAddingSkill ? (
-                  <div className="flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-200">
-                    <input
-                      type="text"
-                      value={newSkillName}
-                      onChange={(e) => setNewSkillName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleAddCustomSkill();
-                        if (e.key === 'Escape') setIsAddingSkill(false);
-                      }}
-                      placeholder="Type custom skill..."
-                      autoFocus
-                      className="px-4 py-2 rounded-2xl text-sm font-semibold bg-background border-2 border-primary text-foreground focus:outline-none shadow-md w-44"
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleAddCustomSkill}
-                      className="rounded-2xl px-3.5 py-2 h-auto text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-                    >
-                      Add
-                    </Button>
-                    <button
-                      type="button"
-                      onClick={() => setIsAddingSkill(false)}
-                      className="p-1.5 rounded-full hover:bg-secondary text-muted-foreground hover:text-foreground text-xs"
-                      title="Cancel"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <motion.button
-                    type="button"
-                    whileTap={{ scale: 0.94 }}
-                    whileHover={{ scale: 1.05 }}
-                    onClick={() => setIsAddingSkill(true)}
-                    className="px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-200 flex items-center gap-1.5 border-2 border-dashed border-primary/60 text-primary hover:border-primary hover:bg-primary/10 shadow-sm cursor-pointer select-none"
-                  >
-                    <span>add+</span>
-                  </motion.button>
-                )}
-              </div>
-
-              {selectedSkills.length === 0 && (
-                <p className="text-xs text-destructive font-medium flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" /> Please select at least 1 technical competency to proceed.
+              {selectedDomain && selectedSkills.length === 0 && (
+                <p className="text-xs text-destructive font-medium flex items-center gap-1 mt-4">
+                  <AlertCircle className="w-4 h-4" /> Please select at least 1 skill to proceed.
                 </p>
               )}
             </motion.div>
@@ -1091,7 +1246,7 @@ export default function OnboardingPage() {
                 >
                   <label className="cursor-pointer flex flex-col items-center justify-center space-y-4">
                     <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-md">
-                      <UploadCloud className="w-10 h-10 animate-bounce" />
+                      <UploadCloud className="w-10 h-10" />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-foreground">Drag & Drop your PDF Resume here</h3>
@@ -1110,20 +1265,6 @@ export default function OnboardingPage() {
                     />
                   </label>
 
-                  <div className="mt-8 pt-6 border-t border-border/40 flex items-center justify-center gap-6 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> AES-256 Encrypted</span>
-                    <span className="flex items-center gap-1.5"><Cpu className="w-4 h-4 text-primary" /> Instant AI Extraction</span>
-                  </div>
-
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={() => simulateResumeScan(new File([""], "Anandhu_Pradeep_Resume_2026.pdf", { type: "application/pdf" }))}
-                      className="text-xs text-primary underline hover:text-primary/80 font-medium"
-                    >
-                      Don&apos;t have a resume handy? Click here to simulate AI scan with a sample profile
-                    </button>
-                  </div>
                 </div>
               ) : isScanning ? (
                 <div className="p-10 rounded-3xl bg-secondary/40 border border-border/60 text-center space-y-6">
@@ -1259,7 +1400,13 @@ export default function OnboardingPage() {
               <Button 
                 variant="outline" 
                 size="lg"
-                onClick={() => setStep(prev => Math.max(0, prev - 1))}
+                onClick={() => {
+                  if (step === 5 && selectedDomain) {
+                    setSelectedDomain(null);
+                  } else {
+                    setStep(prev => Math.max(0, prev - 1));
+                  }
+                }}
                 className="rounded-xl px-6 font-semibold hover:bg-secondary"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -1306,6 +1453,21 @@ export default function OnboardingPage() {
           </div>
         )}
       </main>
+
+      {/* Toast Notification Popup */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] text-destructive text-sm font-bold flex items-center gap-2 drop-shadow-md"
+          >
+            <AlertCircle className="w-4 h-4" />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

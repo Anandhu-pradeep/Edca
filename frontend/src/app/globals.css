@@ -102,3 +102,53 @@ h1, h2, h3, h4, h5, h6 {
 .animate-float-delayed {
   animation: float-delayed 8s ease-in-out infinite 2s;
 }
+
+/* Uiverse Domain Button Style */
+.domain-btn {
+  height: 50px;
+  width: 200px;
+  position: relative;
+  background-color: transparent;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.2);
+  overflow: hidden;
+  border-radius: 30px;
+  color: var(--foreground);
+  transition: all 0.5s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.domain-btn .btn-txt {
+  z-index: 1;
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.domain-btn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: all 0.5s ease-in-out;
+  background-color: var(--foreground);
+  border-radius: 30px;
+  visibility: hidden;
+  height: 10px;
+  width: 10px;
+  z-index: 0;
+}
+
+.domain-btn:hover {
+  box-shadow: 1px 1px 100px rgba(255,255,255,0.1);
+  color: var(--background);
+  border-color: transparent;
+}
+
+.domain-btn:hover::after {
+  visibility: visible;
+  transform: scale(100) translateX(2px);
+}

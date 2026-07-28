@@ -22,7 +22,8 @@ import {
   Building2, 
   ChevronRight,
   RefreshCw,
-  Loader2
+  Loader2,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -42,6 +43,14 @@ export function DashboardContent() {
   const resumeName = user.resumeName || 'Anandhu_Pradeep_Resume_2026.pdf';
   const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName || username)}&background=3b82f6&color=fff&size=256&bold=true`;
   const [avatar, setAvatar] = useState<string>(user.avatar || defaultAvatar);
+  const [profileMenuOpen, setProfileMenuOpen] = useState<boolean>(false);
+  const [copied, setCopied] = useState<boolean>(false);
+
+  const handleCopyUsername = () => {
+    navigator.clipboard.writeText(`@${username}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     if (user.avatar && !user.avatar.startsWith('blob:')) {
@@ -87,34 +96,87 @@ export function DashboardContent() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard/settings">
-              <Button variant="outline" size="sm" className="rounded-xl hidden sm:inline-flex text-xs font-semibold">
-                <Settings className="w-3.5 h-3.5 mr-1.5" />
-                <span>Security & Sessions</span>
-              </Button>
-            </Link>
-
+          <div className="relative flex items-center gap-3">
             <button 
-              onClick={handleRestartOnboarding}
-              title="Test Onboarding Flow Again"
-              className="p-2 rounded-xl bg-secondary hover:bg-primary hover:text-white transition-colors text-muted-foreground flex items-center gap-1.5 text-xs font-medium px-3"
+              onClick={handleCopyUsername}
+              title="Click to copy username"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary/30 hover:bg-secondary/70 border border-transparent hover:border-border/60 transition-all text-foreground cursor-pointer"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Test Onboarding</span>
+              <span className="text-base font-extrabold tracking-tight">@{username}</span>
+              {copied && (
+                <Check className="w-3.5 h-3.5 text-emerald-500 animate-in zoom-in-50 duration-150" />
+              )}
+            </button>
+            <button 
+              onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+              className="relative rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-transform active:scale-95 cursor-pointer"
+              title="Account Menu"
+            >
+              <img 
+                src={avatar} 
+                alt={username} 
+                className="w-10 h-10 rounded-full object-cover border-2 border-primary/40 shadow-md hover:border-primary transition-colors" 
+                onError={() => setAvatar(defaultAvatar)} 
+              />
             </button>
 
-            <div className="flex items-center gap-3 pl-3 border-l border-border/50">
-              <img src={avatar} alt={username} className="w-8 h-8 rounded-full object-cover border-2 border-primary/40 shadow-sm" onError={() => setAvatar(defaultAvatar)} />
-              <div className="hidden sm:block text-right">
-                <span className="text-xs font-bold block text-foreground">@{username}</span>
-                <span className="text-[10px] text-muted-foreground block">{targetRole}</span>
-              </div>
-            </div>
+            {/* Backdrop to close menu on outside click */}
+            {profileMenuOpen && (
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => setProfileMenuOpen(false)} 
+              />
+            )}
 
-            <Button variant="ghost" size="icon" onClick={logout} title="Log out" className="text-destructive hover:bg-destructive/10">
-              <LogOut className="w-4 h-4" />
-            </Button>
+            {/* Clickable Profile Dropdown Menu */}
+            {profileMenuOpen && (
+              <div className="absolute right-0 top-14 w-56 rounded-2xl bg-card border border-border/80 shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-3 py-2 border-b border-border/50 mb-1">
+                  <p className="text-xs font-semibold text-foreground truncate">{user.firstName || username}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{user.email || `@${username}`}</p>
+                </div>
+
+                <Link 
+                  href="/onboarding" 
+                  onClick={() => setProfileMenuOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-foreground hover:bg-secondary transition-colors"
+                >
+                  <UserIcon className="w-4 h-4 text-primary" />
+                  <span>Profile</span>
+                </Link>
+
+                <Link 
+                  href="/dashboard/settings" 
+                  onClick={() => setProfileMenuOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-foreground hover:bg-secondary transition-colors"
+                >
+                  <Settings className="w-4 h-4 text-indigo-500" />
+                  <span>Settings</span>
+                </Link>
+
+                <Link 
+                  href="/#pricing" 
+                  onClick={() => setProfileMenuOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-foreground hover:bg-secondary transition-colors"
+                >
+                  <Award className="w-4 h-4 text-purple-500" />
+                  <span>Subscription</span>
+                </Link>
+
+                <div className="h-px bg-border/60 my-1" />
+
+                <button 
+                  onClick={() => {
+                    setProfileMenuOpen(false);
+                    logout();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors text-left cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
