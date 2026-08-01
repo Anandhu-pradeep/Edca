@@ -18,6 +18,10 @@ public class UserDto {
   private String firstName;
   private String lastName;
   private String avatar;
+  private String banner;
+  private String customThemeBg;
+  private String customTextColor;
+  private String authProvider;
   private List<String> roles;
   private List<String> permissions;
   @JsonProperty("isOnboarded")

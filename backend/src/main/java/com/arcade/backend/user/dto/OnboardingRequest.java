@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 public class OnboardingRequest {
   private String username;
   private String avatar;
+  private String banner;
+  private String customThemeBg;
+  private String customTextColor;
   private String phone;
   private String location;
   private String gender;

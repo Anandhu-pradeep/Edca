@@ -50,6 +50,9 @@ public class User extends BaseEntity {
   @Column(name = "avatar", columnDefinition = "TEXT")
   private String avatar;
 
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  private UserTheme userTheme;
+
   @Column(name = "is_email_verified", nullable = false)
   @Builder.Default
   private boolean isEmailVerified = false;

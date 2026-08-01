@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import SmoothScroll from "@/components/SmoothScroll";
 import { ThemeProvider } from "@/components/theme-provider";
+import ClientBackground from "@/components/ClientBackground";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,13 +16,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col bg-background text-foreground relative">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
+          <ClientBackground />
           <SmoothScroll>
             {children}
           </SmoothScroll>

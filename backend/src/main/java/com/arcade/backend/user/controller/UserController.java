@@ -12,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,6 +56,35 @@ public class UserController {
             .code("ONBOARDING_COMPLETED")
             .message("User onboarding completed successfully.")
             .data(updatedUserDto)
+            .path(servletRequest.getRequestURI())
+            .build());
+  }
+
+  @GetMapping("/public/{username}")
+  public ResponseEntity<ApiResponse<UserDto>> getUserByUsername(
+      @PathVariable String username, HttpServletRequest servletRequest) {
+    UserDto userDto = userService.getUserByUsername(username);
+    return ResponseEntity.ok(
+        ApiResponse.<UserDto>builder()
+            .status(HttpStatus.OK.value())
+            .code("USER_RETRIEVED")
+            .message("Public user profile retrieved successfully.")
+            .data(userDto)
+            .path(servletRequest.getRequestURI())
+            .build());
+  }
+
+  @DeleteMapping("/me")
+  public ResponseEntity<ApiResponse<Void>> deleteAccount(
+      @AuthenticationPrincipal CustomUserDetails userDetails, HttpServletRequest servletRequest) {
+    User user = userDetails.getUser();
+    userService.deleteAccount(user.getId());
+    return ResponseEntity.ok(
+        ApiResponse.<Void>builder()
+            .status(HttpStatus.OK.value())
+            .code("ACCOUNT_DELETED")
+            .message("User account deleted successfully.")
+            .data(null)
             .path(servletRequest.getRequestURI())
             .build());
   }

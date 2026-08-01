@@ -63,6 +63,7 @@ D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\user\dto\User
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\user\service\UserService.java
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\user\User.java
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\user\UserRepository.java
+D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\user\UserTheme.java
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\websocket\config\JwtHandshakeInterceptor.java
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\websocket\config\WebSocketConfig.java
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\websocket\handler\NativeWebSocketHandler.java

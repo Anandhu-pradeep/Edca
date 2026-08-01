@@ -1,6 +1,8 @@
 spring:
   jpa:
     show-sql: true # Helpful for development
+    hibernate:
+      ddl-auto: update
 
   flyway:
     url: ${spring.datasource.url}

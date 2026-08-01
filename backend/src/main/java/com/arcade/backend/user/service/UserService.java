@@ -3,6 +3,7 @@ package com.arcade.backend.user.service;
 import com.arcade.backend.auth.service.AuthService;
 import com.arcade.backend.user.User;
 import com.arcade.backend.user.UserRepository;
+import com.arcade.backend.user.UserTheme;
 import com.arcade.backend.user.dto.OnboardingRequest;
 import com.arcade.backend.user.dto.UserDto;
 import java.util.HashSet;
@@ -29,6 +30,24 @@ public class UserService {
       user.setUsername(request.getUsername().trim().toLowerCase());
     }
     if (request.getAvatar() != null) user.setAvatar(request.getAvatar());
+    
+    if (request.getBanner() != null || request.getCustomThemeBg() != null || request.getCustomTextColor() != null) {
+      if (user.getUserTheme() == null) {
+        UserTheme theme = new UserTheme();
+        theme.setUser(user);
+        user.setUserTheme(theme);
+      }
+      if (request.getBanner() != null) {
+        user.getUserTheme().setBanner(request.getBanner().isEmpty() ? null : request.getBanner());
+      }
+      if (request.getCustomThemeBg() != null) {
+        user.getUserTheme().setCustomThemeBg(request.getCustomThemeBg().isEmpty() ? null : request.getCustomThemeBg());
+      }
+      if (request.getCustomTextColor() != null) {
+        user.getUserTheme().setCustomTextColor(request.getCustomTextColor().isEmpty() ? null : request.getCustomTextColor());
+      }
+    }
+
     if (request.getPhone() != null) user.setPhone(request.getPhone());
     if (request.getLocation() != null) user.setLocation(request.getLocation());
     if (request.getGender() != null) user.setGender(request.getGender());
@@ -46,5 +65,21 @@ public class UserService {
     user = userRepository.save(user);
 
     return authService.mapToUserDto(user);
+  }
+
+  public UserDto getUserByUsername(String username) {
+    User user =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+    return authService.mapToUserDto(user);
+  }
+
+  @Transactional
+  public void deleteAccount(UUID userId) {
+    if (!userRepository.existsById(userId)) {
+      throw new RuntimeException("User not found with ID: " + userId);
+    }
+    userRepository.deleteById(userId);
   }
 }

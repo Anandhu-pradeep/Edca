@@ -4,6 +4,15 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  jackson:
+    parser:
+      max-string-length: 50000000
+
   config:
     import: optional:file:.env[.properties]
 
@@ -57,3 +66,8 @@ application:
       expiration: 2592000000 # 30 days
     webrtc:
       secret-key: ${WEBRTC_SECRET_KEY}
+
+server:
+  tomcat:
+    max-http-form-post-size: 50MB
+    max-swallow-size: 50MB

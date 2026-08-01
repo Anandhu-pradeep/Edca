@@ -1,5 +1,22 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, StateStorage, createJSONStorage } from 'zustand/middleware';
+import { get, set as idbSet, del } from 'idb-keyval';
+
+// IndexedDB storage for Zustand to bypass localStorage 5MB limits
+const idbStorage: StateStorage = {
+  getItem: async (name: string): Promise<string | null> => {
+    if (typeof window === 'undefined') return null;
+    return (await get(name)) || null;
+  },
+  setItem: async (name: string, value: string): Promise<void> => {
+    if (typeof window === 'undefined') return;
+    await idbSet(name, value);
+  },
+  removeItem: async (name: string): Promise<void> => {
+    if (typeof window === 'undefined') return;
+    await del(name);
+  },
+};
 
 export interface User {
   id: string;
@@ -11,6 +28,10 @@ export interface User {
   isOnboarded?: boolean;
   username?: string;
   avatar?: string;
+  banner?: string;
+  customThemeBg?: string;
+  customTextColor?: string;
+  authProvider?: string;
   phone?: string;
   location?: string;
   gender?: string;
@@ -35,6 +56,7 @@ interface AuthState {
   logout: () => void;
   setInitializing: (val: boolean) => void;
   setOnboarded: (val: boolean, profileData?: Partial<User>) => void;
+  updateUser: (profileData: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -71,10 +93,16 @@ export const useAuthStore = create<AuthState>()(
   setOnboarded: (val, profileData) => set((state) => {
     const updatedUser = state.user ? { ...state.user, isOnboarded: val, ...profileData } : null;
     return { ...state, user: updatedUser };
+  }),
+
+  updateUser: (profileData) => set((state) => {
+    const updatedUser = state.user ? { ...state.user, ...profileData } : null;
+    return { ...state, user: updatedUser };
   })
     }),
     {
       name: 'edca_auth_session',
+      storage: createJSONStorage(() => idbStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.isInitializing = false;

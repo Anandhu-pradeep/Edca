@@ -58,7 +58,7 @@ src\main\java\com\arcade\backend\security\oauth2\OAuth2AuthenticationSuccessHand
 src\main\java\com\arcade\backend\security\SecurityConfig.java 2026-07-26T08:34:07.155037600Z
 src\main\java\com\arcade\backend\user\controller\UserController.java 2026-07-26T08:34:07.212413700Z
 src\main\java\com\arcade\backend\user\dto\UserDto.java 2026-07-26T09:35:09.812043400Z
-src\main\java\com\arcade\backend\user\User.java 2026-07-26T11:01:25.428531400Z
+src\main\java\com\arcade\backend\user\User.java 2026-08-01T13:46:02.024685600Z
 src\main\java\com\arcade\backend\user\UserRepository.java 2026-07-26T08:34:07.310956400Z
 src\main\java\com\arcade\backend\websocket\config\JwtHandshakeInterceptor.java 2026-07-26T08:34:07.353754600Z
 src\main\java\com\arcade\backend\websocket\config\WebSocketConfig.java 2026-07-26T08:34:07.373030500Z

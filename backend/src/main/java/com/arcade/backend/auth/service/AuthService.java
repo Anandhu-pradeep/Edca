@@ -221,6 +221,10 @@ public class AuthService {
         .firstName(user.getFirstName() != null ? user.getFirstName() : "Anandhu")
         .lastName(user.getLastName() != null ? user.getLastName() : "Pradeep")
         .avatar(user.getAvatar())
+        .banner(user.getUserTheme() != null ? user.getUserTheme().getBanner() : null)
+        .customThemeBg(user.getUserTheme() != null ? user.getUserTheme().getCustomThemeBg() : null)
+        .customTextColor(user.getUserTheme() != null ? user.getUserTheme().getCustomTextColor() : null)
+        .authProvider(user.getAuthProvider())
         .roles(
             user.getRoles() != null
                 ? user.getRoles().stream().map(Role::getName).toList()
