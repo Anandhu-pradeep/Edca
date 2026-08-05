@@ -105,7 +105,7 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => idbStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          state.isInitializing = false;
+          state.setInitializing(false);
         }
       },
     }
