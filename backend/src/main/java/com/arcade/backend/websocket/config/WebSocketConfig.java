@@ -20,6 +20,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
     registry
         .addHandler(nativeWebSocketHandler, "/ws/v1/events")
         .addInterceptors(jwtHandshakeInterceptor)
-        .setAllowedOrigins("http://localhost:3000"); // Allowed origins in prod
+        .setAllowedOriginPatterns("*"); // Allow all origins for dev and generic access
   }
 }

@@ -214,7 +214,10 @@ export default function SignPage() {
         className="relative w-full h-screen bg-[#e0f2fe] dark:bg-card overflow-hidden shadow-2xl flex z-10"
       >
         {/* LEFT COLUMN: REGISTER FLOW */}
-        <div className="absolute top-0 left-0 w-full md:w-[45%] h-full flex flex-col justify-center px-8 md:px-12 py-8 z-0">
+        <div className={cn(
+          "absolute top-0 left-0 w-full md:w-[45%] h-full flex flex-col justify-center px-8 md:px-12 py-8 z-0",
+          view === 'login' && "pointer-events-none"
+        )}>
           <AnimatePresence mode="wait">
             {view === 'register-email' && (
               <motion.div
@@ -528,7 +531,10 @@ export default function SignPage() {
         </div>
 
         {/* RIGHT COLUMN: LOGIN VIEW */}
-        <div className="absolute top-0 right-0 w-full md:w-[45%] h-full flex flex-col justify-center px-8 md:px-12 py-8 z-0">
+        <div className={cn(
+          "absolute top-0 right-0 w-full md:w-[45%] h-full flex flex-col justify-center px-8 md:px-12 py-8 z-0",
+          view !== 'login' && "pointer-events-none"
+        )}>
           <AnimatePresence mode="wait">
             {view === 'login' && (
               <motion.div

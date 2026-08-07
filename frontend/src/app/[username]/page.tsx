@@ -5,6 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { MapPin, Briefcase, GraduationCap, Edit, User as UserIcon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import dynamic from 'next/dynamic';
+import errorAnimation from '../../../public/404 Error.json';
+
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 export default function ProfilePage() {
   const params = useParams();
@@ -15,7 +19,6 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [errorVideoStep, setErrorVideoStep] = useState<1 | 2>(1);
 
   useEffect(() => {
     fetch(`http://localhost:8080/api/v1/users/public/${username}`)
@@ -44,41 +47,48 @@ export default function ProfilePage() {
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8 text-center relative overflow-hidden animate-in fade-in duration-500">
+      <div className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900">
         
-        {/* Full Screen 404 Videos Background */}
-        <div className="absolute inset-0 w-full h-full z-0">
-           {errorVideoStep === 1 ? (
-             <video 
-               src="/404(1).mp4" 
-               autoPlay 
-               muted 
-               playsInline 
-               className="w-full h-full object-cover"
-               onEnded={() => setErrorVideoStep(2)}
-             />
-           ) : (
-             <video 
-               src="/404(2).mp4" 
-               autoPlay 
-               loop 
-               muted 
-               playsInline 
-               className="w-full h-full object-cover animate-in fade-in duration-500"
-             />
-           )}
+        {/* Abstract Background Shapes */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-pulse" />
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute -bottom-8 left-1/2 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-pulse" style={{ animationDelay: '4s' }} />
+
+        {/* Back Button */}
+        <div className="absolute top-8 left-8 z-20">
+          <Button 
+          onClick={() => router.push('/')} 
+          variant="ghost" 
+          size="icon"
+          className="w-14 h-14 rounded-full hover:scale-105 transition-all duration-300 backdrop-blur-2xl bg-gradient-to-br from-white/20 to-white/5 border border-white/30 text-white shadow-[0_8px_32px_rgba(0,0,0,0.25)] hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+          style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.3), 0 8px 32px rgba(0,0,0,0.3)' }}
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </Button>
         </div>
 
-        {/* Content on top of video */}
-        <div className="absolute top-8 left-8 z-10">
-          <Button 
-            onClick={() => router.push('/')} 
-            variant="ghost" 
-            className="gap-2 px-6 py-6 text-lg font-semibold rounded-full hover:scale-105 transition-all duration-300 backdrop-blur-2xl bg-gradient-to-br from-white/20 to-white/5 border border-white/30 text-white shadow-[0_8px_32px_rgba(0,0,0,0.25)] hover:bg-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
-            style={{ boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.3), 0 8px 32px rgba(0,0,0,0.3)' }}
-          >
-            <ArrowLeft className="w-5 h-5" /> Back to Home
-          </Button>
+        {/* Content Container (Full Screen) */}
+        <div className="relative z-10 w-full px-6 flex flex-col items-center text-center">
+          
+          {/* Lottie Animation */}
+          <div className="w-full max-w-lg md:max-w-xl mx-auto h-[40vh] md:h-[50vh] flex items-center justify-center mb-6">
+            <Lottie 
+              animationData={errorAnimation} 
+              loop={true} 
+              className="w-full h-full object-contain drop-shadow-2xl"
+            />
+          </div>
+
+          {/* Text Container */}
+          <div className="space-y-4">
+            <h1 className="text-4xl md:text-6xl font-bold text-white drop-shadow-md tracking-tight">
+              Oops! User Not Found
+            </h1>
+            <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-medium">
+              We couldn't find the user you're looking for. They might have changed their username or deleted their account.
+            </p>
+          </div>
+          
         </div>
       </div>
     );

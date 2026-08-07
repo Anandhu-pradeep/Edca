@@ -1,21 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Video, Keyboard, Plus, X, Users, Search, Link as LinkIcon, Play, Briefcase, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 export function InterviewsSection() {
+  const router = useRouter();
   const [meetingCode, setMeetingCode] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
 
-  // Generate an 8-character alphanumeric code
+  // Generate a 6-character alphanumeric code
   const generateCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 6; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return code;
@@ -61,6 +63,14 @@ export function InterviewsSection() {
             />
           </div>
           <Button 
+            onClick={() => {
+              const code = meetingCode.trim();
+              if (code && /^[a-zA-Z0-9]{6}$/.test(code)) {
+                router.push(`/interview/${code}`);
+              } else {
+                alert('Please enter a valid 6-digit alphanumeric code.');
+              }
+            }}
             disabled={!meetingCode.trim()}
             variant="ghost" 
             className={cn(
@@ -115,6 +125,7 @@ function UserDecorativeIcon({ color }: { color: string }) {
 
 // Sub-component for the Modal
 function NewMeetingModal({ isOpen, onClose, generatedCode }: { isOpen: boolean; onClose: () => void; generatedCode: string }) {
+  const router = useRouter();
   const [meetingName, setMeetingName] = useState('');
   const [allowOthers, setAllowOthers] = useState(true);
   const [field, setField] = useState('Ask from your CV');
@@ -260,7 +271,10 @@ function NewMeetingModal({ isOpen, onClose, generatedCode }: { isOpen: boolean; 
           <Button variant="ghost" onClick={onClose} className="hover:bg-background/50">
             Cancel
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20">
+          <Button 
+            onClick={() => router.push(`/interview/${generatedCode}?action=create`)}
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
+          >
             Start Meeting
           </Button>
         </div>

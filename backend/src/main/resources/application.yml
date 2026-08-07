@@ -61,9 +61,9 @@ application:
   security:
     jwt:
       secret-key: ${JWT_SECRET_KEY}
-      expiration: 900000 # 15 minutes
+      expiration: 86400000
     refresh-token:
-      expiration: 2592000000 # 30 days
+      expiration: 6048000000 # 30 days
     webrtc:
       secret-key: ${WEBRTC_SECRET_KEY}
 

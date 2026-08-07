@@ -67,11 +67,15 @@ public class UserService {
     return authService.mapToUserDto(user);
   }
 
-  public UserDto getUserByUsername(String username) {
-    User user =
-        userRepository
-            .findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+  public UserDto getUserByUsername(String usernameOrEmail) {
+    User user;
+    if (usernameOrEmail.contains("@")) {
+      user = userRepository.findByEmail(usernameOrEmail)
+          .orElseThrow(() -> new RuntimeException("User not found with email: " + usernameOrEmail));
+    } else {
+      user = userRepository.findByUsername(usernameOrEmail)
+          .orElseThrow(() -> new RuntimeException("User not found with username: " + usernameOrEmail));
+    }
     return authService.mapToUserDto(user);
   }
 
