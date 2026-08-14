@@ -142,6 +142,10 @@ export default function ProfilePage() {
                 src={profile.avatar || `https://ui-avatars.com/api/?name=${profile.username}&background=3b82f6&color=fff&size=256`} 
                 alt={profile.username}
                 className="w-36 h-36 md:w-44 md:h-44 rounded-full border-4 border-background shadow-2xl object-cover bg-card transition-transform duration-500 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.src = `https://ui-avatars.com/api/?name=${profile.username}&background=3b82f6&color=fff&size=256`;
+                }}
               />
             </div>
             

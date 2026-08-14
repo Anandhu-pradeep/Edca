@@ -115,4 +115,8 @@ public class User extends BaseEntity {
   @Column(name = "skill")
   @Builder.Default
   private Set<String> techStack = new HashSet<>();
+
+  @Column(name = "credits", columnDefinition = "integer default 10")
+  @Builder.Default
+  private Integer credits = 10;
 }

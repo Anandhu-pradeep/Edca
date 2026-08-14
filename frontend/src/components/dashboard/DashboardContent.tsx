@@ -11,6 +11,7 @@ import {
   User as UserIcon, 
   FileText, 
   Play, 
+  Shield,
   ChevronRight,
   ChevronDown,
   ChevronsLeft,
@@ -47,6 +48,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { InterviewsSection } from './sections/InterviewsSection';
+import { AudienceSection } from './sections/AudienceSection';
+import { AssignRolesSection } from './sections/AssignRolesSection';
 
 const performanceData = [
   { name: 'Jan', score: 65 },
@@ -77,8 +80,10 @@ export function DashboardContent() {
   const resumeName = user.resumeName || 'Birth Certificate .pdf';
   const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.firstName || username)}&background=3b82f6&color=fff&size=256&bold=true`;
   
+  const isSuperAdmin = user?.roles?.includes('ROLE_SUPER_ADMIN');
+  
   const [avatar, setAvatar] = useState<string>(user.avatar || defaultAvatar);
-  const [activeTab, setActiveTab] = useState<string>('Dashboard');
+  const [activeTab, setActiveTab] = useState<string>(isSuperAdmin ? 'Audience' : 'Dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(true);
   const [mounted, setMounted] = useState(false);
   const [headerOpacity, setHeaderOpacity] = useState(1);
@@ -116,19 +121,36 @@ export function DashboardContent() {
     }
   }, [user.avatar, defaultAvatar]);
 
-  const sidebarItems = [
+  const isAdminOrSuperAdmin = user?.roles?.includes('ROLE_ADMIN') || isSuperAdmin;
+
+  let sidebarItems = [
     { label: 'Dashboard', icon: Home, badge: 0 },
     { label: 'Interviews', icon: Video, badge: 3 },
     { label: 'Interview Reports', icon: MonitorPlay, badge: 0 },
     { label: 'Resume Review', icon: FileText, badge: 0 },
     { label: 'Analytics', icon: LineChartIcon, badge: 0 },
     { label: 'Community', icon: Users, badge: 12 },
+    ...(isAdminOrSuperAdmin ? [
+      { label: 'Audience', icon: Users, badge: 0 },
+      { label: 'Assign Roles', icon: Shield, badge: 0 }
+    ] : []),
   ];
 
-  const accountItems = [
+  let accountItems = [
     { label: 'Settings', icon: Settings },
     { label: 'Help & Support', icon: LifeBuoy },
   ];
+
+  if (isSuperAdmin) {
+    sidebarItems = [
+      { label: 'Interviews', icon: Video, badge: 3 },
+      { label: 'Audience', icon: Users, badge: 0 },
+      { label: 'Assign Roles', icon: Shield, badge: 0 },
+    ];
+    accountItems = [
+      { label: 'Settings', icon: Settings },
+    ];
+  }
 
   return (
     <div className="min-h-screen bg-transparent text-foreground selection:bg-primary/20 selection:text-primary flex overflow-hidden font-sans">
@@ -323,10 +345,6 @@ export function DashboardContent() {
                       <UserIcon className="w-3.5 h-3.5" />
                       Profile
                     </Link>
-                    <button className="w-full flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-md transition-colors cursor-pointer">
-                      <Briefcase className="w-3.5 h-3.5" />
-                      Organizations
-                    </button>
                   </div>
                   <div className="h-px bg-border/40 my-1" />
                   
@@ -434,8 +452,16 @@ export function DashboardContent() {
             {activeTab === 'Interviews' && (
               <InterviewsSection />
             )}
+
+            {activeTab === 'Audience' && isAdminOrSuperAdmin && (
+              <AudienceSection />
+            )}
+
+            {activeTab === 'Assign Roles' && isAdminOrSuperAdmin && (
+              <AssignRolesSection />
+            )}
             
-            {activeTab !== 'Dashboard' && activeTab !== 'Interviews' && (
+            {activeTab !== 'Dashboard' && activeTab !== 'Interviews' && activeTab !== 'Audience' && activeTab !== 'Assign Roles' && (
               <div className="flex flex-col items-center justify-center h-[50vh] text-center animate-in fade-in duration-500">
                 <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4 text-muted-foreground">
                   <Terminal className="w-8 h-8" />

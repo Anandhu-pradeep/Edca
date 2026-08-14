@@ -36,4 +36,5 @@ public class UserDto {
   private String experienceLevel;
   private List<String> techStack;
   private String resumeName;
+  private Integer credits;
 }

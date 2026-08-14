@@ -165,11 +165,11 @@ export default function EditProfileForm() {
       )}
 
       <div>
-        <h2 className="text-xl font-semibold mb-1">Edit Profile</h2>
-        <p className="text-muted-foreground text-sm">Update your public profile and professional details.</p>
+        <h2 className="text-lg font-medium mb-1">Edit Profile</h2>
+        <p className="text-muted-foreground text-xs">Update your public profile and professional details.</p>
       </div>
 
-      <div className="liquid-glass overflow-hidden">
+      <div className="overflow-hidden">
         {/* Banner Section */}
         <div className="relative h-48 sm:h-64 bg-secondary/80 group">
           {banner ? (
@@ -217,22 +217,22 @@ export default function EditProfileForm() {
             
             {/* Locked Fields */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label className="text-xs font-medium text-foreground flex items-center gap-2">
                 Email Address <Lock className="w-3 h-3 text-muted-foreground" />
               </label>
-              <input type="text" disabled value={user?.email || ''} className="w-full p-3 bg-secondary/50 border border-border rounded-xl text-muted-foreground cursor-not-allowed text-sm" />
+              <input type="text" disabled value={user?.email || ''} className="w-full p-3 bg-secondary/50 border border-border rounded-xl text-muted-foreground cursor-not-allowed text-xs" />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label className="text-xs font-medium text-foreground flex items-center gap-2">
                 Gender <Lock className="w-3 h-3 text-muted-foreground" />
               </label>
-              <input type="text" disabled value={user?.gender || 'Prefer not to say'} className="w-full p-3 bg-secondary/50 border border-border rounded-xl text-muted-foreground cursor-not-allowed text-sm" />
+              <input type="text" disabled value={user?.gender || 'Prefer not to say'} className="w-full p-3 bg-secondary/50 border border-border rounded-xl text-muted-foreground cursor-not-allowed text-xs" />
             </div>
 
             {/* Editable Basic Info */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center justify-between">
+              <label className="text-xs font-medium text-foreground flex items-center justify-between">
                 <span className="flex items-center gap-2"><User className="w-4 h-4" /> Username</span>
                 {usernameStatus === 'checking' && <span className="text-xs text-muted-foreground">Checking...</span>}
                 {usernameStatus === 'available' && <span className="text-xs text-emerald-500">Available</span>}
@@ -254,54 +254,54 @@ export default function EditProfileForm() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label className="text-xs font-medium text-foreground flex items-center gap-2">
                 <Phone className="w-4 h-4" /> Phone Number
               </label>
-              <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label className="text-xs font-medium text-foreground flex items-center gap-2">
                 <MapPin className="w-4 h-4" /> Location
               </label>
-              <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label className="text-xs font-medium text-foreground flex items-center gap-2">
                 <Briefcase className="w-4 h-4" /> Target Role
               </label>
-              <input type="text" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <input type="text" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <label className="text-xs font-medium text-foreground flex items-center gap-2">
                 <GraduationCap className="w-4 h-4" /> College / University
               </label>
-              <input type="text" value={college} onChange={(e) => setCollege(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+              <input type="text" value={college} onChange={(e) => setCollege(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Degree</label>
-                <input type="text" value={degree} onChange={(e) => setDegree(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                <label className="text-xs font-medium text-foreground">Degree</label>
+                <input type="text" value={degree} onChange={(e) => setDegree(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Grad Year</label>
-                <input type="text" value={gradYear} onChange={(e) => setGradYear(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                <label className="text-xs font-medium text-foreground">Grad Year</label>
+                <input type="text" value={gradYear} onChange={(e) => setGradYear(e.target.value)} className="w-full p-3 bg-background border border-border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" />
               </div>
             </div>
             
             <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                <Code className="w-4 h-4" /> Tech Stack / Skills <span className="text-xs text-muted-foreground font-normal">(Comma separated)</span>
+              <label className="text-xs font-medium text-foreground flex items-center gap-2">
+                <Code className="w-4 h-4" /> Tech Stack / Skills <span className="text-[10px] text-muted-foreground font-normal">(Comma separated)</span>
               </label>
               <input 
                 type="text" 
                 value={techStackInput} 
                 onChange={(e) => setTechStackInput(e.target.value)} 
                 placeholder="React, Spring Boot, PostgreSQL, Java, Python"
-                className="w-full p-3 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" 
+                className="w-full p-3 bg-background border border-border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/50" 
               />
             </div>
 

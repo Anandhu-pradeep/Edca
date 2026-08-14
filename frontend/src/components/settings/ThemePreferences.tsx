@@ -134,8 +134,8 @@ export default function ThemePreferences() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold mb-1">Preferences</h2>
-          <p className="text-muted-foreground text-sm">Customize your app appearance and custom backgrounds.</p>
+          <h2 className="text-lg font-medium mb-1">Preferences</h2>
+          <p className="text-muted-foreground text-xs">Customize your app appearance and custom backgrounds.</p>
         </div>
         {success && (
           <div className="px-3 py-1 bg-green-500/10 text-green-500 rounded-full text-sm font-bold flex items-center gap-1 animate-in fade-in zoom-in">
@@ -144,9 +144,9 @@ export default function ThemePreferences() {
         )}
       </div>
       
-      <div className="liquid-glass p-6 space-y-6">
+      <div className="pt-4 border-t border-border/30 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center gap-6">
-          <span className="font-medium text-foreground uppercase tracking-wider text-sm w-16">Theme</span>
+          <span className="font-medium text-foreground uppercase tracking-wider text-xs w-16">Theme</span>
           
           <div className="flex flex-wrap items-center bg-secondary/30 p-1 rounded-full border border-border/50 w-fit">
             <button
@@ -207,7 +207,7 @@ export default function ThemePreferences() {
         {/* Custom Background Uploader - Only visible when custom mode is active */}
         {customThemeBg && (
           <div className="pt-4 border-t border-border animate-in fade-in slide-in-from-top-4 duration-300">
-            <h3 className="font-medium text-foreground text-md mb-3">Custom Background Image</h3>
+            <h3 className="font-medium text-foreground text-sm mb-3">Custom Background Image</h3>
             
             <div className="relative w-full h-64 rounded-xl overflow-hidden border-2 border-orange-500/50 group">
               <img src={customThemeBg} alt="Custom Theme" className="w-full h-full object-cover" />
@@ -222,7 +222,7 @@ export default function ThemePreferences() {
             </div>
 
             <div className="mt-6">
-              <h3 className="font-medium text-foreground text-md mb-3">Custom Text Color</h3>
+              <h3 className="font-medium text-foreground text-sm mb-3">Custom Text Color</h3>
               <div className="flex items-center gap-4">
                  <input 
                    type="color" 
@@ -230,7 +230,7 @@ export default function ThemePreferences() {
                    onChange={(e) => setCustomTextColor(e.target.value)}
                    className="w-12 h-12 rounded cursor-pointer border-0 bg-transparent p-1"
                  />
-                 <span className="text-sm text-muted-foreground flex-1">Pick a color that contrasts well with your background image.</span>
+                 <span className="text-xs text-muted-foreground flex-1">Pick a color that contrasts well with your background image.</span>
                  {customTextColor && (
                     <Button variant="outline" size="sm" onClick={() => setCustomTextColor("")} className="liquid-glass-subtle">
                       Reset Color

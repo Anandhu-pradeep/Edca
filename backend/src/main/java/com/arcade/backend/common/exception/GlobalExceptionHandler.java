@@ -61,11 +61,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGenericException(
       Exception ex, HttpServletRequest request) {
-    // In a real application, you would log the full stack trace here and return a generic message
+    ex.printStackTrace(); // Added to see the hidden 500 error in logs
     return buildResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         "INTERNAL_ERROR",
-        "An unexpected error occurred",
+        "An unexpected error occurred: " + ex.getMessage(),
         request.getRequestURI());
   }
 

@@ -39,6 +39,17 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         token = authHeader.substring(7);
       } else if (queryToken != null) {
         token = queryToken;
+      } else {
+        // Fallback: manually parse query string if parameter map wasn't populated during Upgrade
+        String query = request.getURI().getQuery();
+        if (query != null) {
+          for (String param : query.split("&")) {
+            if (param.startsWith("token=")) {
+              token = param.substring(6);
+              break;
+            }
+          }
+        }
       }
 
       if (token != null) {
@@ -52,11 +63,13 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
           }
         } catch (Exception e) {
           log.error("WebSocket Handshake failed due to invalid JWT: {}", e.getMessage());
+          response.setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
           return false;
         }
       }
     }
     log.warn("WebSocket Handshake blocked: Missing or invalid token");
+    response.setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
     return false;
   }
 

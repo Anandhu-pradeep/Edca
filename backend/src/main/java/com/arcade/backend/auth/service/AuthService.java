@@ -229,7 +229,14 @@ public class AuthService {
             user.getRoles() != null
                 ? user.getRoles().stream().map(Role::getName).toList()
                 : List.<String>of())
-        .permissions(List.<String>of())
+        .permissions(
+            user.getRoles() != null
+                ? user.getRoles().stream()
+                    .flatMap(role -> role.getPermissions() != null ? role.getPermissions().stream() : java.util.stream.Stream.empty())
+                    .map(com.arcade.backend.role.Permission::getName)
+                    .distinct()
+                    .toList()
+                : List.<String>of())
         .isOnboarded(user.isOnboarded())
         .phone(user.getPhone())
         .location(user.getLocation())
@@ -241,6 +248,7 @@ public class AuthService {
         .experienceLevel(user.getExperienceLevel())
         .techStack(user.getTechStack() != null ? user.getTechStack().stream().toList() : List.<String>of())
         .resumeName(user.getResumeName())
+        .credits(user.getCredits())
         .build();
   }
 }

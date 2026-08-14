@@ -89,8 +89,9 @@ export function useSocket(roomId: string | null, action: string | null = 'join')
       setConnectionState('Disconnected');
     };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+    ws.onerror = (event) => {
+      // The event object doesn't stringify well, so we log a generic message or its type
+      console.error('WebSocket error observed. Connection failed.');
       setConnectionState('Disconnected');
     };
 

@@ -64,7 +64,13 @@ export function VideoPlayer({ stream, isLocal = false, className, isMuted = fals
         <div className="w-full h-full flex items-center justify-center bg-slate-800">
           <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-blue-600 flex items-center justify-center shadow-2xl border-4 border-slate-700 overflow-hidden">
             {avatarUrl ? (
-              <img src={avatarUrl} alt={username} className="w-full h-full object-cover" />
+              <img 
+                src={avatarUrl} 
+                alt={username} 
+                className="w-full h-full object-cover" 
+                referrerPolicy="no-referrer"
+                onError={() => setAvatarUrl(null)}
+              />
             ) : (
               <span className="text-5xl md:text-6xl text-white font-bold">{initial}</span>
             )}
