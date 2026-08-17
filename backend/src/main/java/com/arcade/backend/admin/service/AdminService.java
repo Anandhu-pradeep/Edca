@@ -78,11 +78,22 @@ public class AdminService {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-    // Check if user is a super admin
-    boolean isSuperAdmin = user.getRoles().stream()
+    boolean isTargetSuperAdmin = user.getRoles().stream()
         .anyMatch(role -> "ROLE_SUPER_ADMIN".equals(role.getName()));
+    boolean isTargetAdmin = user.getRoles().stream()
+        .anyMatch(role -> "ROLE_ADMIN".equals(role.getName()));
 
-    if (isSuperAdmin) {
+    if (isTargetSuperAdmin || isTargetAdmin) {
+      Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+      boolean isRequesterSuperAdmin = authentication != null && authentication.getAuthorities().stream()
+          .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+          
+      if (!isRequesterSuperAdmin) {
+        throw new SecurityException("You do not have permission to delete Admin or Super Admin accounts.");
+      }
+    }
+
+    if (isTargetSuperAdmin) {
       long superAdminCount = getSuperAdminCount();
       if (superAdminCount <= 1) {
         throw new IllegalStateException("Cannot delete the last Super Admin account.");
@@ -155,6 +166,18 @@ public class AdminService {
         .description(role.getDescription())
         .permissions(role.getPermissions().stream().map(Permission::getName).collect(java.util.stream.Collectors.toList()))
         .build();
+  }
+
+  @Transactional
+  public void deletePolicy(Long policyId) {
+    Role role = roleRepository.findById(policyId)
+        .orElseThrow(() -> new IllegalArgumentException("Policy not found"));
+
+    if (role.getName().startsWith("ROLE_")) {
+      throw new IllegalArgumentException("Cannot delete built-in roles");
+    }
+
+    roleRepository.delete(role);
   }
 
   @Transactional(readOnly = true)

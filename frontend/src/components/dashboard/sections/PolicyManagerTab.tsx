@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { axiosInstance } from '@/lib/axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Pencil, ShieldCheck, Search, X } from 'lucide-react';
+import { Plus, Pencil, ShieldCheck, Search, X, Trash2 } from 'lucide-react';
 
 interface PolicyDto {
   id: number;
@@ -74,9 +74,23 @@ export function PolicyManagerTab() {
   };
 
   const handleTogglePermission = (permName: string) => {
-    setSelectedPerms(prev => 
-      prev.includes(permName) ? prev.filter(p => p !== permName) : [...prev, permName]
-    );
+    if (permName === 'user_read' && selectedPerms.includes('user_delete')) {
+      return; // Locked, cannot toggle
+    }
+
+    setSelectedPerms(prev => {
+      const isCurrentlyChecked = prev.includes(permName);
+      let newPerms = isCurrentlyChecked ? prev.filter(p => p !== permName) : [...prev, permName];
+      
+      // Auto-enable user_read if user_delete is enabled
+      if (!isCurrentlyChecked && permName === 'user_delete') {
+        if (!newPerms.includes('user_read')) {
+          newPerms.push('user_read');
+        }
+      }
+      
+      return newPerms;
+    });
   };
 
   const handleSubmit = async () => {
@@ -103,6 +117,19 @@ export function PolicyManagerTab() {
       fetchData();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to save policy');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeletePolicy = async (policyId: number) => {
+    if (!window.confirm("Are you sure you want to delete this policy? This action cannot be undone.")) return;
+    try {
+      setSubmitting(true);
+      await axiosInstance.delete(`/admin/policies/${policyId}`);
+      fetchData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete policy');
     } finally {
       setSubmitting(false);
     }
@@ -157,14 +184,26 @@ export function PolicyManagerTab() {
                     <h3 className="font-semibold text-foreground text-lg leading-none mb-1.5">{policy.name}</h3>
                     <p className="text-sm text-muted-foreground line-clamp-2">{policy.description}</p>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
-                    onClick={() => handleOpenEdit(policy)}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() => handleOpenEdit(policy)}
+                      title="Edit Policy"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDeletePolicy(policy.id)}
+                      title="Delete Policy"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="mt-auto pt-4 flex flex-wrap gap-1.5">
@@ -228,19 +267,26 @@ export function PolicyManagerTab() {
                 <div className="grid gap-2">
                   {permissions.map(perm => {
                     const isChecked = selectedPerms.includes(perm.name);
+                    const isLocked = perm.name === 'user_read' && selectedPerms.includes('user_delete');
+                    
                     return (
                       <div 
                         key={perm.id} 
-                        onClick={() => handleTogglePermission(perm.name)}
-                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
-                          isChecked ? 'border-primary/50 bg-primary/5' : 'border-border/40 bg-secondary/10 hover:bg-secondary/20'
+                        onClick={() => { if (!isLocked) handleTogglePermission(perm.name); }}
+                        className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                          isLocked ? 'cursor-not-allowed opacity-60 bg-secondary/20 border-border/20' : 
+                          isChecked ? 'border-primary/50 bg-primary/5 cursor-pointer' : 'border-border/40 bg-secondary/10 hover:bg-secondary/20 cursor-pointer'
                         }`}
+                        title={isLocked ? "User read is required when user delete is enabled" : ""}
                       >
                         <div className="pr-4">
-                          <p className="text-sm font-medium text-foreground">{perm.name.replace('_', ' ')}</p>
+                          <p className="text-sm font-medium text-foreground">
+                            {perm.name.replace('_', ' ')}
+                            {isLocked && <span className="ml-2 text-[10px] text-muted-foreground italic">(Auto-enabled)</span>}
+                          </p>
                           <p className="text-xs text-muted-foreground mt-0.5">{perm.description}</p>
                         </div>
-                        <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${isChecked ? 'bg-primary' : 'bg-input'}`}>
+                        <div className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${isChecked ? 'bg-primary' : 'bg-input'} ${isLocked ? 'opacity-70' : 'cursor-pointer'}`}>
                           <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-background shadow ring-0 transition duration-200 ease-in-out ${isChecked ? 'translate-x-4' : 'translate-x-0'}`} />
                         </div>
                       </div>

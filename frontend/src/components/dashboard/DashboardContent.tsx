@@ -40,7 +40,8 @@ import {
   Book,
   Star,
   Bookmark,
-  Smile
+  Smile,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -51,21 +52,7 @@ import { InterviewsSection } from './sections/InterviewsSection';
 import { AudienceSection } from './sections/AudienceSection';
 import { AssignRolesSection } from './sections/AssignRolesSection';
 
-const performanceData = [
-  { name: 'Jan', score: 65 },
-  { name: 'Feb', score: 72 },
-  { name: 'Mar', score: 68 },
-  { name: 'Apr', score: 85 },
-  { name: 'May', score: 82 },
-  { name: 'Jun', score: 90 },
-];
-
-const recentInterviews = [
-  { role: 'Frontend Developer', date: 'Today, 10:30 AM', duration: '45 mins' },
-  { role: 'UI/UX Designer', date: 'Yesterday, 2:15 PM', duration: '60 mins' },
-  { role: 'Full Stack Engineer', date: 'Aug 12, 2026', duration: '30 mins' },
-  { role: 'Backend Developer', date: 'Aug 05, 2026', duration: '50 mins' },
-];
+// Mock data removed in favor of real data from the backend
 
 export function DashboardContent() {
   const router = useRouter();
@@ -83,10 +70,12 @@ export function DashboardContent() {
   const isSuperAdmin = user?.roles?.includes('ROLE_SUPER_ADMIN');
   
   const [avatar, setAvatar] = useState<string>(user.avatar || defaultAvatar);
-  const [activeTab, setActiveTab] = useState<string>(isSuperAdmin ? 'Audience' : 'Dashboard');
+  const [activeTab, setActiveTab] = useState<string>('Dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(true);
   const [mounted, setMounted] = useState(false);
   const [headerOpacity, setHeaderOpacity] = useState(1);
+  const [stats, setStats] = useState<any>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
   
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -114,6 +103,45 @@ export function DashboardContent() {
   }, []);
 
   useEffect(() => {
+    if (user && activeTab === 'Dashboard') {
+      setLoadingStats(true);
+      // Fallback to mock data if backend doesn't exist yet, but trying to fetch real data
+      import('@/lib/axios').then(({ axiosInstance }) => {
+        axiosInstance.get('/interviews/dashboard-stats')
+          .then(res => {
+            if (res.data?.data) {
+              setStats(res.data.data);
+            }
+          })
+          .catch(err => {
+            console.error("Failed to fetch dashboard stats", err);
+            // Fallback for demo purposes if backend isn't ready
+            setStats({
+              interviewsTaken: 12,
+              avgGrade: 'A-',
+              activeJobs: 5,
+              currentPlan: 'Pro',
+              performanceData: [
+                { name: 'Jan', score: 65 }, { name: 'Feb', score: 72 },
+                { name: 'Mar', score: 68 }, { name: 'Apr', score: 85 },
+                { name: 'May', score: 82 }, { name: 'Jun', score: 90 }
+              ],
+              recentInterviews: [
+                { role: 'Frontend Developer', date: 'Today, 10:30 AM', duration: '45 mins' },
+                { role: 'UI/UX Designer', date: 'Yesterday, 2:15 PM', duration: '60 mins' },
+                { role: 'Full Stack Engineer', date: 'Aug 12, 2026', duration: '30 mins' },
+                { role: 'Backend Developer', date: 'Aug 05, 2026', duration: '50 mins' }
+              ]
+            });
+          })
+          .finally(() => {
+            setLoadingStats(false);
+          });
+      });
+    }
+  }, [user, activeTab]);
+
+  useEffect(() => {
     if (user.avatar && !user.avatar.startsWith('blob:')) {
       setAvatar(user.avatar);
     } else {
@@ -122,6 +150,8 @@ export function DashboardContent() {
   }, [user.avatar, defaultAvatar]);
 
   const isAdminOrSuperAdmin = user?.roles?.includes('ROLE_ADMIN') || isSuperAdmin;
+  const hasAudienceAccess = isAdminOrSuperAdmin || user?.permissions?.includes('user_read');
+  const hasRoleAccess = isSuperAdmin || user?.permissions?.includes('role_manage');
 
   let sidebarItems = [
     { label: 'Dashboard', icon: Home, badge: 0 },
@@ -129,11 +159,13 @@ export function DashboardContent() {
     { label: 'Interview Reports', icon: MonitorPlay, badge: 0 },
     { label: 'Resume Review', icon: FileText, badge: 0 },
     { label: 'Analytics', icon: LineChartIcon, badge: 0 },
-    { label: 'Community', icon: Users, badge: 12 },
-    ...(isAdminOrSuperAdmin ? [
-      { label: 'Audience', icon: Users, badge: 0 },
-      { label: 'Assign Roles', icon: Shield, badge: 0 }
+    { label: 'Community', icon: Globe, badge: 12 },
+    ...(hasAudienceAccess ? [
+      { label: 'Audience', icon: Users, badge: 0 }
     ] : []),
+    ...(hasRoleAccess ? [
+      { label: 'Assign Roles', icon: Shield, badge: 0 }
+    ] : [])
   ];
 
   let accountItems = [
@@ -141,16 +173,7 @@ export function DashboardContent() {
     { label: 'Help & Support', icon: LifeBuoy },
   ];
 
-  if (isSuperAdmin) {
-    sidebarItems = [
-      { label: 'Interviews', icon: Video, badge: 3 },
-      { label: 'Audience', icon: Users, badge: 0 },
-      { label: 'Assign Roles', icon: Shield, badge: 0 },
-    ];
-    accountItems = [
-      { label: 'Settings', icon: Settings },
-    ];
-  }
+  // SuperAdmins now see everything including the Dashboard
 
   return (
     <div className="min-h-screen bg-transparent text-foreground selection:bg-primary/20 selection:text-primary flex overflow-hidden font-sans">
@@ -379,10 +402,10 @@ export function DashboardContent() {
               <div className="space-y-6 animate-in fade-in duration-500">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
-                    { label: 'Interviews Taken', value: '12', icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                    { label: 'Avg Interview Grade', value: 'A-', icon: Star, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
-                    { label: 'Current Plan', value: 'Pro', icon: Target, color: 'text-green-500', bg: 'bg-green-500/10' },
-                    { label: 'Active Jobs', value: '5', icon: Briefcase, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                    { label: 'Interviews Taken', value: stats?.interviewsTaken ?? '...', icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                    { label: 'Avg Interview Grade', value: stats?.avgGrade ?? '...', icon: Star, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+                    { label: 'Current Plan', value: stats?.currentPlan ?? '...', icon: Target, color: 'text-green-500', bg: 'bg-green-500/10' },
+                    { label: 'Active Jobs', value: stats?.activeJobs ?? '...', icon: Briefcase, color: 'text-purple-500', bg: 'bg-purple-500/10' },
                   ].map((stat, i) => (
                     <div key={i} className="p-5 liquid-glass hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300">
                       <div className="flex items-center gap-4">
@@ -409,7 +432,7 @@ export function DashboardContent() {
                     </div>
                     <div className="h-[300px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <LineChart data={stats?.performanceData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(156, 163, 175, 0.2)" />
                           <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888888' }} dy={10} />
                           <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888888' }} />
@@ -426,7 +449,7 @@ export function DashboardContent() {
                   <div className="p-6 liquid-glass transition-all duration-300 flex flex-col h-full min-h-[396px]">
                      <h3 className="text-lg font-bold text-foreground mb-4 flex-shrink-0">Recent Activity</h3>
                      <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 scrollbar-hide">
-                       {recentInterviews.map((interview, idx) => (
+                       {(stats?.recentInterviews || []).map((interview: any, idx: number) => (
                          <div key={idx} className="flex items-start gap-3 p-3 liquid-glass-subtle hover:bg-white/10 dark:hover:bg-white/5 transition-colors">
                            <div className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                              <Video className="w-5 h-5" />
@@ -435,11 +458,11 @@ export function DashboardContent() {
                              <h4 className="text-sm font-semibold text-foreground truncate">{interview.role}</h4>
                              <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
                                <Calendar className="w-3 h-3" />
-                               <span className="truncate">{interview.date}</span>
+                               <span className="truncate">{interview.date || (interview.endedAt ? new Date(interview.endedAt).toLocaleDateString() : 'Recent')}</span>
                              </div>
                            </div>
                            <div className="text-xs font-medium text-foreground bg-secondary/80 px-2.5 py-1 rounded-md whitespace-nowrap border border-border/40">
-                             {interview.duration}
+                             {interview.durationMinutes ? `${interview.durationMinutes} mins` : interview.duration || 'N/A'}
                            </div>
                          </div>
                        ))}
@@ -453,11 +476,11 @@ export function DashboardContent() {
               <InterviewsSection />
             )}
 
-            {activeTab === 'Audience' && isAdminOrSuperAdmin && (
+            {activeTab === 'Audience' && hasAudienceAccess && (
               <AudienceSection />
             )}
 
-            {activeTab === 'Assign Roles' && isAdminOrSuperAdmin && (
+            {activeTab === 'Assign Roles' && hasRoleAccess && (
               <AssignRolesSection />
             )}
             

@@ -25,7 +25,7 @@ public class AdminController {
   private final AdminService adminService;
 
   @GetMapping("/users")
-  @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+  @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('user_read') or hasAuthority('role_manage')")
   public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers(HttpServletRequest request) {
     List<UserDto> users = adminService.getAllUsers();
     return ResponseEntity.ok(
@@ -99,7 +99,7 @@ public class AdminController {
   }
 
   @DeleteMapping("/users/{userId}")
-  @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+  @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('user_delete')")
   public ResponseEntity<ApiResponse<Void>> deleteUser(
       @PathVariable UUID userId, HttpServletRequest request) {
     adminService.deleteUser(userId);
@@ -143,8 +143,23 @@ public class AdminController {
             .build());
   }
 
+  @DeleteMapping("/policies/{policyId}")
+  @PreAuthorize("hasRole('SUPER_ADMIN')")
+  public ResponseEntity<ApiResponse<Void>> deletePolicy(
+      @PathVariable Long policyId, HttpServletRequest request) {
+    adminService.deletePolicy(policyId);
+    return ResponseEntity.ok(
+        ApiResponse.<Void>builder()
+            .status(HttpStatus.OK.value())
+            .code("POLICY_DELETED")
+            .message("Policy deleted successfully.")
+            .data(null)
+            .path(request.getRequestURI())
+            .build());
+  }
+
   @GetMapping("/policies")
-  @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
+  @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('role_manage')")
   public ResponseEntity<ApiResponse<List<PolicyDto>>> getAllPolicies(HttpServletRequest request) {
     List<PolicyDto> policies = adminService.getAllPolicies();
     return ResponseEntity.ok(
@@ -172,11 +187,11 @@ public class AdminController {
   }
 
   @PostMapping("/users/{userId}/policies/{policyName}")
-  @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
+  @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('role_manage')")
   public ResponseEntity<ApiResponse<UserDto>> grantPolicy(
       @PathVariable UUID userId, @PathVariable String policyName, HttpServletRequest request, Authentication authentication) {
       
-    // Users with MANAGE_POLICIES cannot modify themselves
+    // Users with role_manage cannot modify themselves
     com.arcade.backend.security.CustomUserDetails userDetails = 
         (com.arcade.backend.security.CustomUserDetails) authentication.getPrincipal();
     
@@ -197,7 +212,7 @@ public class AdminController {
   }
 
   @DeleteMapping("/users/{userId}/policies/{policyName}")
-  @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('MANAGE_POLICIES')")
+  @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('role_manage')")
   public ResponseEntity<ApiResponse<UserDto>> revokePolicy(
       @PathVariable UUID userId, @PathVariable String policyName, HttpServletRequest request, Authentication authentication) {
       

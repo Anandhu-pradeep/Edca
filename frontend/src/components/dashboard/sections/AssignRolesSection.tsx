@@ -30,6 +30,8 @@ export function AssignRolesSection() {
 
   const isSuperAdmin = currentUser?.roles?.includes('ROLE_SUPER_ADMIN');
   const isAdmin = currentUser?.roles?.includes('ROLE_ADMIN');
+  const hasRoleAccess = isSuperAdmin || currentUser?.permissions?.includes('role_manage');
+  const hasDeleteAccess = isSuperAdmin || isAdmin || currentUser?.permissions?.includes('user_delete');
 
   useEffect(() => {
     fetchUsers();
@@ -65,6 +67,18 @@ export function AssignRolesSection() {
       setError(err.response?.data?.message || 'Failed to delete user');
       setTimeout(() => setError(''), 5000);
     }
+  };
+
+  const hasCustomPolicy = (roles: string[]) => {
+    return roles.some(r => !['ROLE_USER', 'ROLE_ORGANIZATION', 'ROLE_ADMIN', 'ROLE_SUPER_ADMIN'].includes(r));
+  };
+
+  const isNormalAdmin = (roles: string[]) => {
+    return (roles.includes('ROLE_ADMIN') || hasCustomPolicy(roles)) && !roles.includes('ROLE_SUPER_ADMIN');
+  };
+
+  const isMember = (roles: string[]) => {
+    return roles.includes('ROLE_USER') && !roles.includes('ROLE_SUPER_ADMIN') && !roles.includes('ROLE_ORGANIZATION') && !isNormalAdmin(roles);
   };
 
   const filteredUsers = users.filter(u => {
@@ -181,13 +195,13 @@ export function AssignRolesSection() {
                             {user.roles.includes('ROLE_SUPER_ADMIN') && (
                               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-500 flex items-center gap-1 w-fit"><ShieldAlert className="w-3 h-3"/> Superadmin</span>
                             )}
-                            {user.roles.includes('ROLE_ADMIN') && !user.roles.includes('ROLE_SUPER_ADMIN') && (
+                            {isNormalAdmin(user.roles) && (
                               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-500 flex items-center gap-1 w-fit"><ShieldCheck className="w-3 h-3"/> Admin</span>
                             )}
                             {user.roles.includes('ROLE_ORGANIZATION') && (
                               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/10 text-orange-500 flex items-center gap-1 w-fit"><Building className="w-3 h-3"/> Org</span>
                             )}
-                            {!user.roles.includes('ROLE_ADMIN') && !user.roles.includes('ROLE_SUPER_ADMIN') && !user.roles.includes('ROLE_ORGANIZATION') && (
+                            {isMember(user.roles) && (
                               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/10 text-green-500 flex items-center gap-1 w-fit"><UserIcon className="w-3 h-3"/> Member</span>
                             )}
                           </div>
@@ -203,15 +217,17 @@ export function AssignRolesSection() {
                               Assign
                             </Button>
           
-                            <Button 
-                              variant="destructive" 
-                              size="icon" 
-                              className="h-8 w-8 flex-shrink-0"
-                              title="Delete User"
-                              onClick={() => handleDeleteUser(user.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            {hasDeleteAccess && (
+                              <Button 
+                                variant="destructive" 
+                                size="icon" 
+                                className="h-8 w-8 flex-shrink-0"
+                                title="Delete User"
+                                onClick={() => handleDeleteUser(user.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>

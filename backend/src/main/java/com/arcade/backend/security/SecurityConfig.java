@@ -60,7 +60,8 @@ public class SecurityConfig {
     "/v3/api-docs/**",
     "/swagger-ui/**",
     "/swagger-ui.html",
-    "/ws/**"
+    "/ws/**",
+    "/api/v1/interviews/test-create"
   };
 
   @Bean
@@ -81,8 +82,6 @@ public class SecurityConfig {
             req ->
                 req.requestMatchers(WHITE_LIST_URLS)
                     .permitAll()
-                    .requestMatchers("/api/v1/admin/**")
-                    .hasAnyRole("ADMIN", "SUPER_ADMIN")
                     .anyRequest()
                     .authenticated())
         .oauth2Login(

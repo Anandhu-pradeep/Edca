@@ -28,9 +28,8 @@ src\main\java\com\arcade\backend\auth\service\PasswordPolicyValidator.java 2026-
 src\main\java\com\arcade\backend\auth\service\RateLimitingService.java 2026-07-26T08:34:05.855119100Z
 src\main\java\com\arcade\backend\auth\service\RefreshTokenService.java 2026-07-26T08:34:05.955251600Z
 src\main\java\com\arcade\backend\auth\service\SessionService.java 2026-07-26T08:34:05.988657300Z
-src\main\java\com\arcade\backend\BackendApplication.java 2026-07-19T10:21:23.850476800Z
+src\main\java\com\arcade\backend\BackendApplication.java 2026-08-15T10:58:31.625040100Z
 src\main\java\com\arcade\backend\common\dto\ApiResponse.java 2026-07-26T08:34:06.018157800Z
-src\main\java\com\arcade\backend\common\entity\BaseEntity.java 2026-07-26T08:34:06.052389200Z
 src\main\java\com\arcade\backend\common\exception\BadRequestException.java 2026-07-10T03:40:48.405998500Z
 src\main\java\com\arcade\backend\common\exception\ErrorResponse.java 2026-07-10T03:40:48.405998500Z
 src\main\java\com\arcade\backend\common\exception\ForbiddenException.java 2026-07-10T03:40:48.414766Z

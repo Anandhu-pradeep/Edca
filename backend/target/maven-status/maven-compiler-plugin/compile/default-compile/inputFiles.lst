@@ -44,6 +44,13 @@ D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\common\except
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\common\exception\UnauthorizedException.java
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\common\service\EmailService.java
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\config\OpenApiConfig.java
+D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\interview\controller\InterviewController.java
+D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\interview\dto\DashboardStatsDto.java
+D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\interview\dto\InterviewDto.java
+D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\interview\dto\InterviewRequest.java
+D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\interview\entity\Interview.java
+D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\interview\repository\InterviewRepository.java
+D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\interview\service\InterviewService.java
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\role\Permission.java
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\role\PermissionRepository.java
 D:\MCA\sem-3\Project\EDCA\backend\src\main\java\com\arcade\backend\role\Role.java

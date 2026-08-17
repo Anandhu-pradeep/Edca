@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useVideoStore } from '@/store/useVideoStore';
 
@@ -112,11 +112,11 @@ export function useSocket(roomId: string | null, action: string | null = 'join')
     };
   }, [roomId, accessToken, setConnectionState, setRemoteVideoState]);
 
-  const sendMessage = (message: any) => {
+  const sendMessage = useCallback((message: any) => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(message));
     }
-  };
+  }, []);
 
   return { sendMessage };
 }

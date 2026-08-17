@@ -15,10 +15,11 @@ public class RoleInitializer implements CommandLineRunner {
 
   @Override
   public void run(String... args) {
-    initPermission("READ_USERS", "Can view all users in Audience");
-    initPermission("MANAGE_POLICIES", "Can assign users to existing policies");
-    initPermission("MANAGE_ORG_REQUESTS", "Can approve or reject organization requests");
-    initPermission("MANAGE_CREDITS", "Can generate redeem codes for free credits");
+    initPermission("user_read", "Can view all users, orgs, admins (Audience section)");
+    initPermission("user_delete", "Admin can delete account, but no right to delete superadmins or admins");
+    initPermission("org_manage", "Can approve or reject the org request");
+    initPermission("redeemcode_manage", "Can generate the redeem code");
+    initPermission("role_manage", "Can assign policy to other user to admins");
 
     initRole("ROLE_USER", "Standard user role");
     initRole("ROLE_ORGANIZATION", "Organization account role");

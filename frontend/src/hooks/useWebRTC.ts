@@ -8,6 +8,7 @@ const STUN_SERVERS: RTCIceServer[] = [
 
 export function useWebRTC(sendMessage: (msg: any) => void, roomId: string) {
   const peersRef = useRef<{ [peerId: string]: RTCPeerConnection }>({});
+  const pendingCandidates = useRef<{ [peerId: string]: RTCIceCandidateInit[] }>({});
   const { localStream, addRemoteStream, removeRemoteStream, addParticipant, removeParticipant, setParticipants } = useVideoStore();
 
   const createPeerConnection = useCallback((peerId: string) => {
@@ -88,6 +89,12 @@ export function useWebRTC(sendMessage: (msg: any) => void, roomId: string) {
         target: peerId,
         data: pc.localDescription
       });
+      if (pendingCandidates.current[peerId]) {
+        for (const candidate of pendingCandidates.current[peerId]) {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+        delete pendingCandidates.current[peerId];
+      }
     } catch (err) {
       console.error('Error handling offer:', err);
     }
@@ -98,6 +105,12 @@ export function useWebRTC(sendMessage: (msg: any) => void, roomId: string) {
     if (pc) {
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        if (pendingCandidates.current[peerId]) {
+          for (const candidate of pendingCandidates.current[peerId]) {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          }
+          delete pendingCandidates.current[peerId];
+        }
       } catch (err) {
         console.error('Error handling answer:', err);
       }
@@ -106,12 +119,17 @@ export function useWebRTC(sendMessage: (msg: any) => void, roomId: string) {
 
   const handleIceCandidate = useCallback(async (peerId: string, candidate: RTCIceCandidateInit) => {
     const pc = peersRef.current[peerId];
-    if (pc) {
+    if (pc && pc.remoteDescription) {
       try {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (err) {
         console.error('Error adding ICE candidate:', err);
       }
+    } else {
+      if (!pendingCandidates.current[peerId]) {
+        pendingCandidates.current[peerId] = [];
+      }
+      pendingCandidates.current[peerId].push(candidate);
     }
   }, []);
 
