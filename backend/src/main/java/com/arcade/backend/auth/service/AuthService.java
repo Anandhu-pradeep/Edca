@@ -248,7 +248,6 @@ public class AuthService {
         .experienceLevel(user.getExperienceLevel())
         .techStack(user.getTechStack() != null ? user.getTechStack().stream().toList() : List.<String>of())
         .resumeName(user.getResumeName())
-        .credits(user.getCredits())
         .build();
   }
 }

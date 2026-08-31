@@ -41,7 +41,6 @@ src\main\java\com\arcade\backend\config\OpenApiConfig.java 2026-07-10T03:40:48.4
 src\main\java\com\arcade\backend\role\Permission.java 2026-07-26T08:34:06.114933200Z
 src\main\java\com\arcade\backend\role\PermissionRepository.java 2026-07-26T08:34:06.139785200Z
 src\main\java\com\arcade\backend\role\Role.java 2026-07-26T08:34:06.177646300Z
-src\main\java\com\arcade\backend\role\RoleInitializer.java 2026-08-12T09:43:44.544953900Z
 src\main\java\com\arcade\backend\role\RoleRepository.java 2026-07-26T08:34:06.226912100Z
 src\main\java\com\arcade\backend\security\ApplicationConfig.java 2026-07-26T08:34:06.266293Z
 src\main\java\com\arcade\backend\security\CustomAccessDeniedHandler.java 2026-07-26T08:34:06.302603600Z
@@ -52,7 +51,6 @@ src\main\java\com\arcade\backend\security\jwt\JwtService.java 2026-07-26T08:34:0
 src\main\java\com\arcade\backend\security\oauth2\CustomOAuth2User.java 2026-07-26T08:34:06.591829200Z
 src\main\java\com\arcade\backend\security\oauth2\CustomOAuth2UserService.java 2026-07-26T08:34:06.792421300Z
 src\main\java\com\arcade\backend\security\oauth2\OAuth2AuthenticationFailureHandler.java 2026-07-26T08:34:06.901829600Z
-src\main\java\com\arcade\backend\user\User.java 2026-08-12T10:12:30.409875600Z
 src\main\java\com\arcade\backend\user\UserRepository.java 2026-07-26T08:34:07.310956400Z
 src\main\java\com\arcade\backend\websocket\config\JwtHandshakeInterceptor.java 2026-08-11T11:01:24.774038300Z
 src\main\java\com\arcade\backend\websocket\config\WebSocketConfig.java 2026-08-05T07:03:12.875694800Z

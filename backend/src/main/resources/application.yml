@@ -32,6 +32,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+    validate-on-migrate: false
 
   mail:
     host: smtp.gmail.com
@@ -66,6 +67,10 @@ application:
       expiration: 6048000000 # 30 days
     webrtc:
       secret-key: ${WEBRTC_SECRET_KEY}
+
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID}
+    key-secret: ${RAZORPAY_KEY_SECRET}
 
 server:
   tomcat:

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import SmoothScroll from "@/components/SmoothScroll";
 import { ThemeProvider } from "@/components/theme-provider";
 import ClientBackground from "@/components/ClientBackground";
+import { Providers } from "@/components/providers";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,10 +25,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ClientBackground />
-          <SmoothScroll>
-            {children}
-          </SmoothScroll>
+          <Providers>
+            <ClientBackground />
+            <SmoothScroll>
+              {children}
+            </SmoothScroll>
+            <Toaster position="top-right" richColors />
+          </Providers>
         </ThemeProvider>
       </body>
     </html>

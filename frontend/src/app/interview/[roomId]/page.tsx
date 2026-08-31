@@ -8,8 +8,11 @@ import { useSocket } from '@/hooks/useSocket';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { Controls } from '@/components/video/Controls';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { useRef } from 'react';
+import { getCreditBalance, consumeInterviewCredits } from '@/lib/credit';
+import { toast } from 'sonner';
+import Link from 'next/link';
 
 export default function InterviewRoom({ params }: { params: Promise<{ roomId: string }> }) {
   const router = useRouter();
@@ -28,22 +31,44 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
   useWebRTC(sendMessage, roomId);
   
   const interviewIdRef = useRef<string | null>(null);
+  const [hasSufficientCredits, setHasSufficientCredits] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    getCreditBalance().then(res => {
+      if (mounted) {
+        if (res.balance < 10) {
+          setHasSufficientCredits(false);
+          toast.error("Insufficient credits to start the interview. Please top up.", { id: "credits" });
+        } else {
+          setHasSufficientCredits(true);
+        }
+      }
+    }).catch(err => {
+      console.error("Failed to fetch credits", err);
+      // Fallback: allow to proceed or fail. We'll fail safe.
+      if (mounted) setHasSufficientCredits(false);
+    });
+    return () => { mounted = false; };
+  }, []);
 
   useEffect(() => {
     // Record the interview start in the database so it shows on the dashboard
     let mounted = true;
-    import('@/lib/axios').then(({ axiosInstance }) => {
-      axiosInstance.post('/interviews', {
-        role: 'Mock Interview (Video Call)',
-        scheduledAt: new Date().toISOString()
-      }).then(res => {
-        if (mounted && res.data?.data?.id) {
-          interviewIdRef.current = res.data.data.id;
-        }
-      }).catch(err => console.error("Failed to record interview start:", err));
-    });
+    if (hasSufficientCredits === true) {
+      import('@/lib/axios').then(({ axiosInstance }) => {
+        axiosInstance.post('/interviews', {
+          role: 'Mock Interview (Video Call)',
+          scheduledAt: new Date().toISOString()
+        }).then(res => {
+          if (mounted && res.data?.data?.id) {
+            interviewIdRef.current = res.data.data.id;
+          }
+        }).catch(err => console.error("Failed to record interview start:", err));
+      });
+    }
     return () => { mounted = false; };
-  }, []);
+  }, [hasSufficientCredits]);
 
   const handleLeave = () => {
     sendMessage({ type: 'leave-room', roomId });
@@ -62,6 +87,12 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
         const mockGrade = grades[Math.floor(Math.random() * grades.length)];
         
         axiosInstance.put(`/interviews/${interviewIdRef.current}/complete?grade=${mockGrade}&durationMinutes=${mockDuration}`)
+          .then(() => {
+            // Deduct credits after successful completion
+            if (interviewIdRef.current) {
+                consumeInterviewCredits(interviewIdRef.current).catch(err => console.error("Failed to deduct credits", err));
+            }
+          })
           .catch(err => console.error("Failed to complete interview:", err));
       });
     }
@@ -94,12 +125,36 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
     );
   }
 
-  if (!localStream || connectionState === 'Waiting' || connectionState === 'Connecting') {
+  if (hasSufficientCredits === false) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="text-center p-8 bg-destructive/10 rounded-2xl max-w-md">
+          <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <p className="text-destructive font-semibold mb-2">Insufficient Credits</p>
+          <p className="text-muted-foreground mb-6">You need at least 10 credits to start an interview.</p>
+          <div className="flex gap-4 justify-center">
+              <Link href="/dashboard">
+                <button className="px-4 py-2 bg-background border border-border rounded-lg hover:bg-secondary transition-colors">
+                  Dashboard
+                </button>
+              </Link>
+              <Link href="/credits">
+                <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+                  Buy Credits
+                </button>
+              </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasSufficientCredits === null || !localStream || connectionState === 'Waiting' || connectionState === 'Connecting') {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-background">
         <Loader2 className="w-10 h-10 animate-spin text-blue-500 mb-4" />
         <p className="text-muted-foreground text-lg font-medium animate-pulse">
-          {(!localStream) ? 'Acquiring camera and microphone...' : `Joining room ${roomId}...`}
+          {hasSufficientCredits === null ? 'Checking credit balance...' : (!localStream) ? 'Acquiring camera and microphone...' : `Joining room ${roomId}...`}
         </p>
       </div>
     );

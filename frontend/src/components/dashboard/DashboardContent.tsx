@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTheme } from 'next-themes';
 import { 
@@ -17,7 +17,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Home,
-  History,
+  History as HistoryIcon,
   Calendar,
   Video,
   Briefcase,
@@ -51,11 +51,15 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { InterviewsSection } from './sections/InterviewsSection';
 import { AudienceSection } from './sections/AudienceSection';
 import { AssignRolesSection } from './sections/AssignRolesSection';
+import { useQuery } from '@tanstack/react-query';
+import { getCreditBalance } from '@/lib/credit';
+import BuyCreditsPage from '@/app/credits/page';
 
 // Mock data removed in favor of real data from the backend
 
-export function DashboardContent() {
+export function DashboardContent({ children, activeTabOverride }: { children?: React.ReactNode, activeTabOverride?: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, logout, setOnboarded } = useAuthStore();
   const { theme, setTheme } = useTheme();
 
@@ -70,7 +74,7 @@ export function DashboardContent() {
   const isSuperAdmin = user?.roles?.includes('ROLE_SUPER_ADMIN');
   
   const [avatar, setAvatar] = useState<string>(user.avatar || defaultAvatar);
-  const [activeTab, setActiveTab] = useState<string>('Dashboard');
+  const [activeTab, setActiveTab] = useState<string>(() => activeTabOverride || searchParams.get('tab') || 'Dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(true);
   const [mounted, setMounted] = useState(false);
   const [headerOpacity, setHeaderOpacity] = useState(1);
@@ -79,6 +83,11 @@ export function DashboardContent() {
   
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  const { data: creditData } = useQuery({
+    queryKey: ['creditBalance'],
+    queryFn: getCreditBalance,
+  });
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -170,6 +179,7 @@ export function DashboardContent() {
 
   let accountItems = [
     { label: 'Settings', icon: Settings },
+    { label: 'Credits & Billing', icon: DollarSign },
     { label: 'Help & Support', icon: LifeBuoy },
   ];
 
@@ -268,21 +278,29 @@ export function DashboardContent() {
               </p>
             )}
             <div className="space-y-1">
-              {accountItems.map((item) => (
-                <Link
+              {accountItems.map((item) => {
+                const isActive = activeTab === item.label;
+                return (
+                <button
                   key={item.label}
-                  href={item.label === 'Settings' ? '/settings' : '#'}
+                  onClick={() => {
+                    if (item.label === 'Settings') {
+                      router.push('/settings');
+                    } else if (item.label === 'Credits & Billing') {
+                      setActiveTab('Credits & Billing');
+                    }
+                  }}
                   title={sidebarCollapsed ? item.label : undefined}
                   className={cn(
                     "w-full flex items-center py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer whitespace-nowrap group",
                     sidebarCollapsed ? "px-0 justify-center" : "px-3 gap-3",
-                    "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                    isActive ? "bg-blue-600/10 text-blue-500" : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
                   )}
                 >
-                  <item.icon className="w-5 h-5 flex-shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  <item.icon className={cn("w-5 h-5 flex-shrink-0 transition-colors", isActive ? "text-blue-500" : "text-muted-foreground group-hover:text-foreground")} />
                   {!sidebarCollapsed && <span className="animate-in fade-in duration-300">{item.label}</span>}
-                </Link>
-              ))}
+                </button>
+              )})}
             </div>
           </div>
 
@@ -398,102 +416,112 @@ export function DashboardContent() {
           </header>
 
           <div className="max-w-7xl mx-auto h-full px-8 pb-8">
-            {activeTab === 'Dashboard' && (
-              <div className="space-y-6 animate-in fade-in duration-500">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[
-                    { label: 'Interviews Taken', value: stats?.interviewsTaken ?? '...', icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                    { label: 'Avg Interview Grade', value: stats?.avgGrade ?? '...', icon: Star, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
-                    { label: 'Current Plan', value: stats?.currentPlan ?? '...', icon: Target, color: 'text-green-500', bg: 'bg-green-500/10' },
-                    { label: 'Active Jobs', value: stats?.activeJobs ?? '...', icon: Briefcase, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-                  ].map((stat, i) => (
-                    <div key={i} className="p-5 liquid-glass hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300">
-                      <div className="flex items-center gap-4">
-                        <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0", stat.bg, stat.color)}>
-                          <stat.icon className="w-6 h-6" />
+            {children ? (
+              children
+            ) : (
+              <>
+                {activeTab === 'Dashboard' && (
+                  <div className="space-y-6 animate-in fade-in duration-500">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {[
+                        { label: 'Interviews Taken', value: stats?.interviewsTaken ?? '...', icon: Video, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                        { label: 'Avg Interview Grade', value: stats?.avgGrade ?? '...', icon: Star, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+                        { label: 'Credits', value: creditData?.balance ?? '...', icon: Target, color: 'text-green-500', bg: 'bg-green-500/10' },
+                        { label: 'Active Jobs', value: stats?.activeJobs ?? '...', icon: Briefcase, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                      ].map((stat, i) => (
+                        <div key={i} className="p-5 liquid-glass hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300">
+                          <div className="flex items-center gap-4">
+                            <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0", stat.bg, stat.color)}>
+                              <stat.icon className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                              <h3 className="text-2xl font-bold text-foreground mt-0.5">{stat.value}</h3>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                          <h3 className="text-2xl font-bold text-foreground mt-0.5">{stat.value}</h3>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                  {/* Performance Graph */}
-                  <div className="lg:col-span-2 p-6 liquid-glass transition-all duration-300">
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="text-lg font-bold text-foreground">Overall Performance</h3>
-                        <p className="text-sm text-muted-foreground">Your average interview scores over time</p>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                      {/* Performance Graph */}
+                      <div className="lg:col-span-2 p-6 liquid-glass transition-all duration-300">
+                        <div className="flex items-center justify-between mb-6">
+                          <div>
+                            <h3 className="text-lg font-bold text-foreground">Overall Performance</h3>
+                            <p className="text-sm text-muted-foreground">Your average interview scores over time</p>
+                          </div>
+                        </div>
+                        <div className="h-[300px] w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={stats?.performanceData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(156, 163, 175, 0.2)" />
+                              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888888' }} dy={10} />
+                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888888' }} />
+                              <Tooltip 
+                                contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                itemStyle={{ color: '#3b82f6', fontWeight: 600 }}
+                              />
+                              <Line type="monotone" dataKey="score" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6', strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
-                    </div>
-                    <div className="h-[300px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={stats?.performanceData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(156, 163, 175, 0.2)" />
-                          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888888' }} dy={10} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888888' }} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                            itemStyle={{ color: '#3b82f6', fontWeight: 600 }}
-                          />
-                          <Line type="monotone" dataKey="score" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6', strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6 liquid-glass transition-all duration-300 flex flex-col h-full min-h-[396px]">
-                     <h3 className="text-lg font-bold text-foreground mb-4 flex-shrink-0">Recent Activity</h3>
-                     <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 scrollbar-hide">
-                       {(stats?.recentInterviews || []).map((interview: any, idx: number) => (
-                         <div key={idx} className="flex items-start gap-3 p-3 liquid-glass-subtle hover:bg-white/10 dark:hover:bg-white/5 transition-colors">
-                           <div className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                             <Video className="w-5 h-5" />
-                           </div>
-                           <div className="flex-1 min-w-0">
-                             <h4 className="text-sm font-semibold text-foreground truncate">{interview.role}</h4>
-                             <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
-                               <Calendar className="w-3 h-3" />
-                               <span className="truncate">{interview.date || (interview.endedAt ? new Date(interview.endedAt).toLocaleDateString() : 'Recent')}</span>
+                      
+                      <div className="p-6 liquid-glass transition-all duration-300 flex flex-col h-full min-h-[396px]">
+                         <h3 className="text-lg font-bold text-foreground mb-4 flex-shrink-0">Recent Activity</h3>
+                         <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-2 scrollbar-hide">
+                           {(stats?.recentInterviews || []).map((interview: any, idx: number) => (
+                             <div key={idx} className="flex items-start gap-3 p-3 liquid-glass-subtle hover:bg-white/10 dark:hover:bg-white/5 transition-colors">
+                               <div className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                 <Video className="w-5 h-5" />
+                               </div>
+                               <div className="flex-1 min-w-0">
+                                 <h4 className="text-sm font-semibold text-foreground truncate">{interview.role}</h4>
+                                 <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
+                                   <Calendar className="w-3 h-3" />
+                                   <span className="truncate">{interview.date || (interview.endedAt ? new Date(interview.endedAt).toLocaleDateString() : 'Recent')}</span>
+                                 </div>
+                               </div>
+                               <div className="text-xs font-medium text-foreground bg-secondary/80 px-2.5 py-1 rounded-md whitespace-nowrap border border-border/40">
+                                 {interview.durationMinutes ? `${interview.durationMinutes} mins` : interview.duration || 'N/A'}
+                               </div>
                              </div>
-                           </div>
-                           <div className="text-xs font-medium text-foreground bg-secondary/80 px-2.5 py-1 rounded-md whitespace-nowrap border border-border/40">
-                             {interview.durationMinutes ? `${interview.durationMinutes} mins` : interview.duration || 'N/A'}
-                           </div>
+                           ))}
                          </div>
-                       ))}
-                     </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
-            
-            {activeTab === 'Interviews' && (
-              <InterviewsSection />
-            )}
+                )}
+                
+                {activeTab === 'Interviews' && (
+                  <InterviewsSection />
+                )}
 
-            {activeTab === 'Audience' && hasAudienceAccess && (
-              <AudienceSection />
-            )}
+                {activeTab === 'Audience' && hasAudienceAccess && (
+                  <AudienceSection />
+                )}
 
-            {activeTab === 'Assign Roles' && hasRoleAccess && (
-              <AssignRolesSection />
-            )}
-            
-            {activeTab !== 'Dashboard' && activeTab !== 'Interviews' && activeTab !== 'Audience' && activeTab !== 'Assign Roles' && (
-              <div className="flex flex-col items-center justify-center h-[50vh] text-center animate-in fade-in duration-500">
-                <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4 text-muted-foreground">
-                  <Terminal className="w-8 h-8" />
-                </div>
-                <h2 className="text-2xl font-bold mb-2">{activeTab}</h2>
-                <p className="text-muted-foreground max-w-md">
-                  This section is currently under development. Check back soon for updates!
-                </p>
-              </div>
+                {activeTab === 'Assign Roles' && hasRoleAccess && (
+                  <AssignRolesSection />
+                )}
+
+                {activeTab === 'Credits & Billing' && (
+                  <BuyCreditsPage />
+                )}
+                
+                {activeTab !== 'Dashboard' && activeTab !== 'Interviews' && activeTab !== 'Audience' && activeTab !== 'Assign Roles' && activeTab !== 'Credits & Billing' && (
+                  <div className="flex flex-col items-center justify-center h-[50vh] text-center animate-in fade-in duration-500">
+                    <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4 text-muted-foreground">
+                      <Terminal className="w-8 h-8" />
+                    </div>
+                    <h2 className="text-2xl font-bold mb-2">{activeTab}</h2>
+                    <p className="text-muted-foreground max-w-md">
+                      This section is currently under development. Check back soon for updates!
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </main>
