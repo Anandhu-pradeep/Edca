@@ -38,6 +38,11 @@ public class CreditService {
 
     @Transactional
     public void addCredits(User user, Long credits, UUID referenceId, String description) {
+        addCredits(user, credits, referenceId, description, TransactionType.PURCHASE);
+    }
+
+    @Transactional
+    public void addCredits(User user, Long credits, UUID referenceId, String description, TransactionType type) {
         Wallet wallet = getOrCreateWallet(user);
         wallet.setBalance(wallet.getBalance() + credits);
         wallet.setTotalPurchased(wallet.getTotalPurchased() + credits);
@@ -45,7 +50,7 @@ public class CreditService {
 
         CreditTransaction transaction = CreditTransaction.builder()
                 .user(user)
-                .type(TransactionType.PURCHASE)
+                .type(type)
                 .credits(credits)
                 .balanceAfter(wallet.getBalance())
                 .referenceId(referenceId)

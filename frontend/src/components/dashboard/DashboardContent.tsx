@@ -173,7 +173,8 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
       { label: 'Audience', icon: Users, badge: 0 }
     ] : []),
     ...(hasRoleAccess ? [
-      { label: 'Assign Roles', icon: Shield, badge: 0 }
+      { label: 'Assign Roles', icon: Shield, badge: 0 },
+      { label: 'Redeem Codes', icon: Tag, badge: 0 }
     ] : [])
   ];
 
@@ -243,7 +244,13 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
               return (
                 <button
                   key={item.label}
-                  onClick={() => setActiveTab(item.label)}
+                  onClick={() => {
+                    if (item.label === 'Redeem Codes') {
+                      router.push('/admin/redeem-codes');
+                    } else {
+                      setActiveTab(item.label);
+                    }
+                  }}
                   title={sidebarCollapsed ? item.label : undefined}
                   className={cn(
                     "w-full flex items-center justify-between py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer whitespace-nowrap group",
@@ -288,6 +295,8 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
                       router.push('/settings');
                     } else if (item.label === 'Credits & Billing') {
                       setActiveTab('Credits & Billing');
+                    } else if (item.label === 'Redeem Codes') {
+                      router.push('/admin/redeem-codes');
                     }
                   }}
                   title={sidebarCollapsed ? item.label : undefined}

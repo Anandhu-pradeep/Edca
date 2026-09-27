@@ -13,6 +13,8 @@ const cleanDescription = (desc: string) => {
     return desc.replace(/ \(ID: [a-zA-Z0-9-]+\)/, '');
 };
 
+import { Suspense } from 'react';
+
 export default function HistoryPage() {
     const { data: payments, isLoading: loadingPayments } = useQuery({
         queryKey: ['paymentHistory'],
@@ -25,6 +27,7 @@ export default function HistoryPage() {
     });
 
     return (
+        <Suspense fallback={<div>Loading...</div>}>
         <DashboardContent activeTabOverride="History">
             <div className="w-full max-w-4xl mx-auto py-6 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <Link href="/?tab=Credits+%26+Billing" className="inline-flex items-center text-xs font-medium text-muted-foreground hover:text-primary transition-colors group mb-2">
@@ -134,5 +137,6 @@ export default function HistoryPage() {
             </Tabs>
         </div>
         </DashboardContent>
+        </Suspense>
     );
 }

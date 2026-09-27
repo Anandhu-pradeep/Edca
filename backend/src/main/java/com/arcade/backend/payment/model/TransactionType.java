@@ -4,5 +4,6 @@ public enum TransactionType {
     PURCHASE,
     INTERVIEW_USAGE,
     REFUND,
-    ADJUSTMENT
+    ADJUSTMENT,
+    REDEEM_CODE
 }

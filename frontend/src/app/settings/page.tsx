@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import ChangePasswordForm from "@/components/settings/ChangePasswordForm";
 import ThemePreferences from "@/components/settings/ThemePreferences";
+import RedeemCodeForm from "@/components/settings/RedeemCodeForm";
 
 interface Session {
   id: string;
@@ -204,6 +205,8 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 )}
+
+                <RedeemCodeForm />
 
                 <div className="pt-4 border-t border-border/30">
                    <div className="flex justify-between items-start mb-6">
