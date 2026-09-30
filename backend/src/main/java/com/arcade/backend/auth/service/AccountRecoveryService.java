@@ -145,7 +145,7 @@ public class AccountRecoveryService {
               .build();
       resetTokenRepo.save(token);
 
-      String resetLink = "http://localhost:3000/reset-password?token=" + rawToken;
+      String resetLink = "https://edca.anandhupradeep.com/reset-password?token=" + rawToken;
       String subject = "EDCA Password Reset Request";
       String body =
           "Hello "

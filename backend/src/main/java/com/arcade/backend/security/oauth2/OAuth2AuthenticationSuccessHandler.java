@@ -67,8 +67,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         user, "LOGIN_SUCCESS_OAUTH2", "User logged in via Google", ipAddress);
 
     String targetRedirectUri = redirectUri;
-    if ("http://localhost:3000".equals(targetRedirectUri) || "http://localhost:3000/".equals(targetRedirectUri)) {
-      targetRedirectUri = "http://localhost:3000/oauth2/redirect";
+    if ("https://edca.anandhupradeep.com".equals(targetRedirectUri) || "https://edca.anandhupradeep.com/".equals(targetRedirectUri) || "http://localhost:3000".equals(targetRedirectUri) || "http://localhost:3000/".equals(targetRedirectUri)) {
+      targetRedirectUri = targetRedirectUri.contains("localhost") ? "http://localhost:3000/oauth2/redirect" : "https://edca.anandhupradeep.com/oauth2/redirect";
     }
 
     return UriComponentsBuilder.fromUriString(targetRedirectUri)
