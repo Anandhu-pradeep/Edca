@@ -73,6 +73,7 @@ application:
     key-secret: ${RAZORPAY_KEY_SECRET}
 
 server:
+  forward-headers-strategy: framework
   tomcat:
     max-http-form-post-size: 50MB
     max-swallow-size: 50MB
