@@ -13,3 +13,7 @@ spring:
     url: ${spring.datasource.url}
     user: ${spring.datasource.username}
     password: ${spring.datasource.password}
+
+app:
+  cors:
+    allowed-origins: https://edca.anandhupradeep.com,http://localhost:3000
