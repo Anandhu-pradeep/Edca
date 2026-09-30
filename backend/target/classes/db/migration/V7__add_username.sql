@@ -1,3 +1,0 @@
--- V7__add_username.sql
--- Add username column to users table
-ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE;
