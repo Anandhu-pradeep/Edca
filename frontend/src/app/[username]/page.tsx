@@ -21,7 +21,8 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`http://localhost:8080/api/v1/users/public/${username}`)
+    // fetch(`http://localhost:8080/api/v1/users/public/${username}`)
+    fetch(`https://api.anandhupradeep.com/api/v1/users/public/${username}`)
       .then((res) => {
         if (!res.ok) throw new Error("User not found");
         return res.json();

@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Lock, Eye, EyeOff, ShieldCheck, AlertCircle } from "lucide-react";
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/v1";
+// const API_URL = "http://localhost:8080/api/v1";
+const API_URL = "https://api.anandhupradeep.com/api/v1";
 
 export default function ChangePasswordForm() {
   const [oldPassword, setOldPassword] = useState("");

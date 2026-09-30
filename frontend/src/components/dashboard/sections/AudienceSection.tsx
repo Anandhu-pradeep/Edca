@@ -29,7 +29,8 @@ export function AudienceSection() {
 
   const [organizations, setOrganizations] = useState<any[]>([]);
 
-  const API_URL = "http://localhost:8080/api/v1";
+  // const API_URL = "http://localhost:8080/api/v1";
+  const API_URL = "https://api.anandhupradeep.com/api/v1";
 
   const isSuperAdmin = currentUser?.roles?.includes('ROLE_SUPER_ADMIN');
   const isAdmin = currentUser?.roles?.includes('ROLE_ADMIN');
