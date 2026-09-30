@@ -66,9 +66,20 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     auditService.logSecurityEvent(
         user, "LOGIN_SUCCESS_OAUTH2", "User logged in via Google", ipAddress);
 
-    String targetRedirectUri = redirectUri;
-    if ("https://edca.anandhupradeep.com".equals(targetRedirectUri) || "https://edca.anandhupradeep.com/".equals(targetRedirectUri) || "http://localhost:3000".equals(targetRedirectUri) || "http://localhost:3000/".equals(targetRedirectUri)) {
-      targetRedirectUri = targetRedirectUri.contains("localhost") ? "http://localhost:3000/oauth2/redirect" : "https://edca.anandhupradeep.com/oauth2/redirect";
+    String targetRedirectUri = CookieUtils.getCookie(request, HttpCookieOAuth2AuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME)
+        .map(jakarta.servlet.http.Cookie::getValue)
+        .orElse(redirectUri);
+
+    // Fallback logic if redirectUri is just localhost but the request is coming from production
+    if (targetRedirectUri.contains("localhost")) {
+      String origin = request.getHeader("Origin");
+      String referer = request.getHeader("Referer");
+      if ((origin != null && origin.contains("edca.anandhupradeep.com")) || 
+          (referer != null && referer.contains("edca.anandhupradeep.com"))) {
+        targetRedirectUri = "https://edca.anandhupradeep.com/oauth2/redirect";
+      } else if ("api.anandhupradeep.com".equals(request.getServerName())) {
+        targetRedirectUri = "https://edca.anandhupradeep.com/oauth2/redirect";
+      }
     }
 
     return UriComponentsBuilder.fromUriString(targetRedirectUri)

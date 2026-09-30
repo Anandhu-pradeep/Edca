@@ -20,8 +20,27 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
   public void onAuthenticationFailure(
       HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
       throws IOException, ServletException {
+    String targetRedirectUri = CookieUtils.getCookie(request, HttpCookieOAuth2AuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME)
+        .map(jakarta.servlet.http.Cookie::getValue)
+        .orElse(redirectUri);
+        
+    // Fallback logic if redirectUri is just localhost but the request is coming from production
+    if (targetRedirectUri.contains("localhost")) {
+      String origin = request.getHeader("Origin");
+      String referer = request.getHeader("Referer");
+      if ((origin != null && origin.contains("edca.anandhupradeep.com")) || 
+          (referer != null && referer.contains("edca.anandhupradeep.com"))) {
+        targetRedirectUri = "https://edca.anandhupradeep.com/sign";
+      } else if ("api.anandhupradeep.com".equals(request.getServerName())) {
+        targetRedirectUri = "https://edca.anandhupradeep.com/sign";
+      }
+    } else {
+      // Ensure failure goes to sign-in page if not explicitly set
+      targetRedirectUri = targetRedirectUri.replace("/oauth2/redirect", "/sign");
+    }
+
     String targetUrl =
-        UriComponentsBuilder.fromUriString(redirectUri)
+        UriComponentsBuilder.fromUriString(targetRedirectUri)
             .queryParam("error", exception.getLocalizedMessage())
             .build()
             .toUriString();
