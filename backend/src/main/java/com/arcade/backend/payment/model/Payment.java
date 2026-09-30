@@ -46,6 +46,9 @@ public class Payment extends BaseEntity {
     @Column(name = "customer_type", nullable = false, length = 50)
     private CustomerType customerType;
 
+    @Column(name = "organization_id")
+    private UUID organizationId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private PaymentStatus status;

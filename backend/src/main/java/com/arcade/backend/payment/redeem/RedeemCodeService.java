@@ -98,9 +98,24 @@ public class RedeemCodeService {
         return redeemCode.getCredits();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<RedeemCode> listRedeemCodes() {
-        return redeemCodeRepository.findAll(); // Should have pagination in a real app, but ok for now
+        List<RedeemCode> codes = redeemCodeRepository.findAll();
+        ZonedDateTime now = ZonedDateTime.now();
+        boolean updated = false;
+        
+        for (RedeemCode code : codes) {
+            if (code.getStatus() == RedeemCodeStatus.ACTIVE && code.getExpiresAt() != null && now.isAfter(code.getExpiresAt())) {
+                code.setStatus(RedeemCodeStatus.EXPIRED);
+                updated = true;
+            }
+        }
+        
+        if (updated) {
+            redeemCodeRepository.saveAll(codes);
+        }
+        
+        return codes;
     }
     
     @Transactional(readOnly = true)

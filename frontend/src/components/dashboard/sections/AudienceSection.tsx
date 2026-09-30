@@ -27,6 +27,8 @@ export function AudienceSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'All' | 'Members' | 'Organisation' | 'Admins' | 'Superadmin'>('All');
 
+  const [organizations, setOrganizations] = useState<any[]>([]);
+
   const API_URL = "http://localhost:8080/api/v1";
 
   const isSuperAdmin = currentUser?.roles?.includes('ROLE_SUPER_ADMIN');
@@ -35,7 +37,10 @@ export function AudienceSection() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+    if (isSuperAdmin) {
+      fetchOrganizations();
+    }
+  }, [isSuperAdmin]);
 
   const fetchUsers = async () => {
     try {
@@ -49,12 +54,33 @@ export function AudienceSection() {
     }
   };
 
+  const fetchOrganizations = async () => {
+    try {
+      const response = await axiosInstance.get(`/admin/organizations`);
+      setOrganizations(response.data);
+    } catch (err: any) {
+      console.error('Failed to fetch organizations', err);
+    }
+  };
+
   const handleDeleteUser = async (userId: string) => {
     try {
       await axiosInstance.delete(`/admin/users/${userId}`);
       fetchUsers();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to delete user');
+      setTimeout(() => setError(''), 5000);
+    }
+  };
+
+  const handleDeleteOrganization = async (orgId: string) => {
+    if (!window.confirm("Are you sure you want to delete this organization? The policyholder will be downgraded to a normal user.")) return;
+    try {
+      await axiosInstance.delete(`/admin/organizations/${orgId}`);
+      fetchOrganizations();
+      fetchUsers(); // Refresh users to reflect downgraded roles
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete organization');
       setTimeout(() => setError(''), 5000);
     }
   };
@@ -95,6 +121,11 @@ export function AudienceSection() {
     }
   });
 
+  const filteredOrganizations = organizations.filter(org => 
+    org.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    org.officialEmail?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const tabs = [
     { id: 'All', label: 'All' },
     { id: 'Members', label: 'Members' },
@@ -119,7 +150,7 @@ export function AudienceSection() {
           <Input 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search users..." 
+            placeholder={activeTab === 'Organisation' ? "Search organizations..." : "Search users..."}
             className="pl-9 bg-background/50 border-border/50"
           />
         </div>
@@ -149,6 +180,59 @@ export function AudienceSection() {
       ) : error ? (
         <div className="p-4 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 text-sm">
           {error}
+        </div>
+      ) : activeTab === 'Organisation' ? (
+        <div className="w-full overflow-x-auto rounded-xl border border-border/40 liquid-glass">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-muted-foreground uppercase bg-secondary/30 border-b border-border/40">
+              <tr>
+                <th className="px-6 py-4 font-semibold">Organization Name</th>
+                <th className="px-6 py-4 font-semibold text-center">Type</th>
+                <th className="px-6 py-4 font-semibold text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/40">
+              {filteredOrganizations.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-6 py-12 text-center text-muted-foreground">
+                    No organizations found matching your criteria.
+                  </td>
+                </tr>
+              ) : (
+                filteredOrganizations.map((org) => (
+                  <tr key={org.id} className="hover:bg-secondary/20 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center shrink-0 font-bold uppercase overflow-hidden">
+                           <Building className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-foreground truncate">{org.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{org.officialEmail}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-500">{org.type}</span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {isSuperAdmin && (
+                        <Button 
+                          variant="destructive" 
+                          size="icon" 
+                          className="h-8 w-8 ml-auto flex-shrink-0"
+                          title="Delete Organization & Downgrade User"
+                          onClick={() => handleDeleteOrganization(org.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className="w-full overflow-x-auto rounded-xl border border-border/40 liquid-glass">

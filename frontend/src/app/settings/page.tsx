@@ -206,7 +206,9 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                <RedeemCodeForm />
+                {(!user?.roles?.includes('ROLE_ORGANIZATION')) && (
+                  <RedeemCodeForm />
+                )}
 
                 <div className="pt-4 border-t border-border/30">
                    <div className="flex justify-between items-start mb-6">
@@ -274,19 +276,90 @@ export default function SettingsPage() {
                       <Trash2 className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-base font-medium text-foreground mb-1">Delete Account</h3>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Permanently delete your account and all of your data. This action is not reversible, so please be certain.
-                      </p>
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={handleDeleteAccount}
-                        disabled={deleting}
-                      >
-                        {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                        Yes, Delete My Account
-                      </Button>
+                      {useAuthStore.getState().activeOrganization?.role === 'OWNER' ? (
+                        <>
+                          <h3 className="text-base font-medium text-foreground mb-1">Request Organization Deletion</h3>
+                          <p className="text-xs text-muted-foreground mb-4">
+                            Send a request to the super admin to permanently delete your organization.
+                          </p>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                setDeleting(true);
+                                await axiosInstance.post(`/organizations/${useAuthStore.getState().activeOrganization?.id}/request-deletion`);
+                                alert("Deletion request sent to super admin.");
+                              } catch(e) {
+                                console.error(e);
+                                alert("Failed to send request.");
+                              } finally {
+                                setDeleting(false);
+                              }
+                            }}
+                            disabled={deleting}
+                          >
+                            {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                            Request Deletion
+                          </Button>
+                        </>
+                      ) : useAuthStore.getState().activeOrganization ? (
+                        <>
+                          <h3 className="text-base font-medium text-foreground mb-1">Leave {useAuthStore.getState().activeOrganization?.name}</h3>
+                          <p className="text-xs text-muted-foreground mb-4">
+                            Leave the organization. Type the organization name below to confirm.
+                          </p>
+                          <div className="flex gap-2">
+                            <input 
+                               type="text" 
+                               id="org-leave-input"
+                               placeholder={useAuthStore.getState().activeOrganization?.name}
+                               className="px-3 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                            />
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              onClick={async () => {
+                                const inputVal = (document.getElementById('org-leave-input') as HTMLInputElement).value;
+                                if (inputVal !== useAuthStore.getState().activeOrganization?.name) {
+                                  alert("Organization name does not match.");
+                                  return;
+                                }
+                                try {
+                                  setDeleting(true);
+                                  await axiosInstance.delete(`/organizations/${useAuthStore.getState().activeOrganization?.id}/members/${user?.id}`);
+                                  window.location.reload();
+                                } catch(e) {
+                                  console.error(e);
+                                  alert("Failed to leave organization.");
+                                } finally {
+                                  setDeleting(false);
+                                }
+                              }}
+                              disabled={deleting}
+                            >
+                              {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                              Leave Organization
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <h3 className="text-base font-medium text-foreground mb-1">Delete Account</h3>
+                          <p className="text-xs text-muted-foreground mb-4">
+                            Permanently delete your account and all of your data. This action is not reversible, so please be certain.
+                          </p>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={handleDeleteAccount}
+                            disabled={deleting}
+                          >
+                            {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                            Yes, Delete My Account
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

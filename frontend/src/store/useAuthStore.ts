@@ -49,6 +49,7 @@ interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
   isInitializing: boolean;
+  activeOrganization: { id: string, name: string, role: string } | null;
   
   // Actions
   setAuth: (user: User, accessToken: string) => void;
@@ -57,6 +58,7 @@ interface AuthState {
   setInitializing: (val: boolean) => void;
   setOnboarded: (val: boolean, profileData?: Partial<User>) => void;
   updateUser: (profileData: Partial<User>) => void;
+  setActiveOrganization: (org: { id: string, name: string, role: string } | null) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -66,6 +68,7 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       isAuthenticated: false,
       isInitializing: true, // Starts true until onRehydrateStorage completes
+      activeOrganization: null,
 
   setAuth: (user, accessToken) => {
     set({ 
@@ -82,7 +85,7 @@ export const useAuthStore = create<AuthState>()(
   })),
 
   logout: () => {
-    set({ user: null, accessToken: null, isAuthenticated: false });
+    set({ user: null, accessToken: null, isAuthenticated: false, activeOrganization: null });
     if (typeof window !== 'undefined') {
       window.location.href = '/sign?view=login';
     }
@@ -98,7 +101,9 @@ export const useAuthStore = create<AuthState>()(
   updateUser: (profileData) => set((state) => {
     const updatedUser = state.user ? { ...state.user, ...profileData } : null;
     return { ...state, user: updatedUser };
-  })
+  }),
+  
+  setActiveOrganization: (org) => set({ activeOrganization: org })
     }),
     {
       name: 'edca_auth_session',

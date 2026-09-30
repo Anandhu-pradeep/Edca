@@ -21,6 +21,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final RazorpayService razorpayService;
     private final CreditService creditService;
+    private final com.arcade.backend.organization.service.OrganizationCreditService organizationCreditService;
 
     @Transactional
     public PaymentOrderResponse createOrder(User user, PaymentOrderRequest request) {
@@ -82,6 +83,76 @@ public class PaymentService {
                     payment.getCredits(),
                     payment.getId(),
                     "Purchased " + payment.getCredits() + " credits"
+            );
+        } else {
+            payment.setStatus(PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+            throw new IllegalStateException("Payment verification failed");
+        }
+    }
+
+    @Transactional
+    public PaymentOrderResponse createOrganizationOrder(User user, java.util.UUID organizationId, PaymentOrderRequest request) {
+        long credits = request.getCredits();
+        long amountInPaise = calculateAmountInPaise(credits, CustomerType.ORGANIZATION);
+
+        try {
+            String receipt = "org_receipt_" + System.currentTimeMillis();
+            Order razorpayOrder = razorpayService.createOrder(amountInPaise, "INR", receipt);
+
+            Payment payment = Payment.builder()
+                    .user(user)
+                    .organizationId(organizationId)
+                    .razorpayOrderId(razorpayOrder.get("id"))
+                    .amount(amountInPaise)
+                    .currency("INR")
+                    .credits(credits)
+                    .customerType(CustomerType.ORGANIZATION)
+                    .status(PaymentStatus.CREATED)
+                    .build();
+            paymentRepository.save(payment);
+
+            return PaymentOrderResponse.builder()
+                    .orderId(payment.getRazorpayOrderId())
+                    .amount(payment.getAmount())
+                    .currency(payment.getCurrency())
+                    .credits(payment.getCredits())
+                    .build();
+
+        } catch (RazorpayException e) {
+            throw new RuntimeException("Error creating Razorpay order: " + e.getMessage(), e);
+        }
+    }
+
+    @Transactional
+    public void verifyOrganizationPayment(java.util.UUID organizationId, PaymentVerificationRequest request) {
+        Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid order ID"));
+
+        if (payment.getStatus() == PaymentStatus.SUCCESS) {
+            return; // Already verified
+        }
+        
+        if (payment.getCustomerType() != CustomerType.ORGANIZATION || !payment.getOrganizationId().equals(organizationId)) {
+            throw new IllegalArgumentException("Invalid payment type or organization");
+        }
+
+        boolean isValid = razorpayService.verifySignature(
+                request.getRazorpayOrderId(),
+                request.getRazorpayPaymentId(),
+                request.getRazorpaySignature()
+        );
+
+        if (isValid) {
+            payment.setRazorpayPaymentId(request.getRazorpayPaymentId());
+            payment.setRazorpaySignature(request.getRazorpaySignature());
+            payment.setStatus(PaymentStatus.SUCCESS);
+            paymentRepository.save(payment);
+
+            organizationCreditService.addCredits(
+                    organizationId,
+                    payment.getCredits().intValue(),
+                    "Purchased " + payment.getCredits() + " credits via Razorpay"
             );
         } else {
             payment.setStatus(PaymentStatus.FAILED);

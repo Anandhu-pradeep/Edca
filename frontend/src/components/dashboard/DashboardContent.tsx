@@ -41,7 +41,9 @@ import {
   Star,
   Bookmark,
   Smile,
-  Globe
+  Globe,
+  Building2,
+  CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -54,13 +56,19 @@ import { AssignRolesSection } from './sections/AssignRolesSection';
 import { useQuery } from '@tanstack/react-query';
 import { getCreditBalance } from '@/lib/credit';
 import BuyCreditsPage from '@/app/credits/page';
+import { OrganizationCreditsView } from './OrganizationCreditsView';
+import { OrganizationMembersView } from './OrganizationMembersView';
+import { OrganizationReportsView } from './OrganizationReportsView';
+import { OrganizationDashboardView } from './OrganizationDashboardView';
+import { OrganizationConsoleView } from './OrganizationConsoleView';
+import { NotificationDropdown } from './NotificationDropdown';
 
 // Mock data removed in favor of real data from the backend
 
 export function DashboardContent({ children, activeTabOverride }: { children?: React.ReactNode, activeTabOverride?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, logout, setOnboarded } = useAuthStore();
+  const { user, logout, setOnboarded, activeOrganization, setActiveOrganization } = useAuthStore();
   const { theme, setTheme } = useTheme();
 
   if (!user) return null;
@@ -89,6 +97,29 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
     queryFn: getCreditBalance,
   });
 
+  const { data: organizations } = useQuery({
+    queryKey: ['myOrganizations'],
+    queryFn: async () => {
+      const { axiosInstance } = await import('@/lib/axios');
+      const res = await axiosInstance.get('/organizations/my');
+      return res.data;
+    },
+    enabled: !!user,
+  });
+
+  // Automatically switch to the user's organization if they have one and haven't selected one
+  useEffect(() => {
+    if (organizations && organizations.length > 0) {
+      if (!activeOrganization || !organizations.some((org: any) => org.organizationId === activeOrganization.id)) {
+        const org = organizations[0];
+        setActiveOrganization({ id: org.organizationId, name: org.name, role: org.role });
+      }
+    } else if (organizations && organizations.length === 0 && activeOrganization) {
+      // User lost access to the organization (deleted or removed)
+      setActiveOrganization(null);
+    }
+  }, [organizations, activeOrganization, setActiveOrganization]);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
@@ -109,6 +140,19 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
 
   useEffect(() => {
     setMounted(true);
+    
+    // Silently refresh user data on mount to ensure roles and state are up to date
+    if (user) {
+      import('@/lib/axios').then(({ axiosInstance }) => {
+        axiosInstance.get('/users/me')
+          .then(res => {
+            if (res.data?.data) {
+              useAuthStore.getState().updateUser(res.data.data);
+            }
+          })
+          .catch(err => console.error('Failed to refresh user data', err));
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -162,27 +206,53 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
   const hasAudienceAccess = isAdminOrSuperAdmin || user?.permissions?.includes('user_read');
   const hasRoleAccess = isSuperAdmin || user?.permissions?.includes('role_manage');
 
-  let sidebarItems = [
-    { label: 'Dashboard', icon: Home, badge: 0 },
-    { label: 'Interviews', icon: Video, badge: 3 },
-    { label: 'Interview Reports', icon: MonitorPlay, badge: 0 },
-    { label: 'Resume Review', icon: FileText, badge: 0 },
-    { label: 'Analytics', icon: LineChartIcon, badge: 0 },
-    { label: 'Community', icon: Globe, badge: 12 },
-    ...(hasAudienceAccess ? [
-      { label: 'Audience', icon: Users, badge: 0 }
-    ] : []),
-    ...(hasRoleAccess ? [
-      { label: 'Assign Roles', icon: Shield, badge: 0 },
-      { label: 'Redeem Codes', icon: Tag, badge: 0 }
-    ] : [])
-  ];
+  let sidebarItems = [];
+  
+  if (activeOrganization) {
+    // Organization Workspace Navigation
+    const isOrgAdmin = activeOrganization.role === 'OWNER' || activeOrganization.role === 'ADMIN';
+    
+    sidebarItems = [
+      { label: 'Dashboard', icon: Home, badge: 0 },
+      { label: 'Classes', icon: Book, badge: 0 },
+      { label: 'Students', icon: Users, badge: 0 },
+      { label: 'Interviews', icon: Video, badge: 0 },
+      { label: 'Reports', icon: LineChartIcon, badge: 0 },
+    ];
+    
+    if (isOrgAdmin) {
+      sidebarItems.push(
+        { label: 'Schedule', icon: Calendar, badge: 0 },
+        { label: 'Credits', icon: Target, badge: 0 },
+        { label: 'Members', icon: Shield, badge: 0 }
+      );
+    }
+  } else {
+    // Personal Workspace Navigation
+    sidebarItems = [
+      { label: 'Dashboard', icon: Home, badge: 0 },
+      { label: 'Interviews', icon: Video, badge: 3 },
+      { label: 'Interview Reports', icon: MonitorPlay, badge: 0 },
+      { label: 'Resume Review', icon: FileText, badge: 0 },
+      { label: 'Analytics', icon: LineChartIcon, badge: 0 },
+      { label: 'Community', icon: Globe, badge: 12 },
+      ...(hasAudienceAccess ? [{ label: 'Audience', icon: Users, badge: 0 }] : []),
+      ...(isSuperAdmin ? [{ label: 'Org Console', icon: Building2, badge: 0 }] : []),
+      ...(hasRoleAccess ? [
+        { label: 'Assign Roles', icon: Shield, badge: 0 },
+        ...((!organizations || organizations.length === 0) ? [{ label: 'Redeem Codes', icon: Tag, badge: 0 }] : [])
+      ] : [])
+    ];
+  }
 
   let accountItems = [
     { label: 'Settings', icon: Settings },
-    { label: 'Credits & Billing', icon: DollarSign },
     { label: 'Help & Support', icon: LifeBuoy },
   ];
+  
+  if (!activeOrganization) {
+    accountItems.splice(1, 0, { label: 'Credits & Billing', icon: DollarSign });
+  }
 
   // SuperAdmins now see everything including the Dashboard
 
@@ -347,15 +417,16 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
             className="px-8 py-6 flex items-start justify-between flex-shrink-0 transition-opacity duration-75"
             style={{ opacity: headerOpacity }}
           >
-          <div>
-            <h1 className="text-lg font-bold font-heading">{activeTab}</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Welcome back to your dashboard</p>
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-lg font-bold font-heading">{activeTab}</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Welcome back to your dashboard</p>
+            </div>
+
+            {/* Workspace Switcher Removed */}
           </div>
           <div className="flex items-center gap-2">
-            <button className="w-8 h-8 rounded-[10px] liquid-glass-subtle flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors relative cursor-pointer shadow-sm">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full border-[1.5px] border-card"></span>
-            </button>
+            <NotificationDropdown />
             <button 
               onClick={() => mounted && setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="w-8 h-8 rounded-[10px] liquid-glass-subtle flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors cursor-pointer shadow-sm"
@@ -377,7 +448,7 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
               </button>
               
               {profileMenuOpen && (
-                <div className="absolute right-0 top-full mt-3 w-44 rounded-xl liquid-glass py-2 z-50 animate-in fade-in slide-in-from-top-2 text-left">
+                <div className="absolute right-0 top-full mt-3 w-44 rounded-xl bg-card py-2 z-50 animate-in fade-in slide-in-from-top-2 text-left border border-border shadow-md">
                   <div className="px-3 py-2.5 flex items-center gap-2.5 border-b border-border/40">
                     <img src={avatar} className="w-8 h-8 rounded-full object-cover border border-border/40" alt={username} />
                     <div className="flex flex-col flex-1 min-w-0">
@@ -429,7 +500,19 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
               children
             ) : (
               <>
-                {activeTab === 'Dashboard' && (
+                {activeTab === 'Members' && activeOrganization && (
+                  <OrganizationMembersView />
+                )}
+                {activeTab === 'Reports' && activeOrganization && (
+                  <OrganizationReportsView />
+                )}
+                {activeTab === 'Credits' && activeOrganization && (
+                  <OrganizationCreditsView />
+                )}
+                {activeTab === 'Dashboard' && activeOrganization && (
+                  <OrganizationDashboardView />
+                )}
+                {activeTab === 'Dashboard' && !activeOrganization && (
                   <div className="space-y-6 animate-in fade-in duration-500">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       {[
@@ -518,8 +601,12 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
                 {activeTab === 'Credits & Billing' && (
                   <BuyCreditsPage />
                 )}
+
+                {activeTab === 'Org Console' && isSuperAdmin && (
+                  <OrganizationConsoleView />
+                )}
                 
-                {activeTab !== 'Dashboard' && activeTab !== 'Interviews' && activeTab !== 'Audience' && activeTab !== 'Assign Roles' && activeTab !== 'Credits & Billing' && (
+                {activeTab !== 'Dashboard' && activeTab !== 'Interviews' && activeTab !== 'Audience' && activeTab !== 'Assign Roles' && activeTab !== 'Credits & Billing' && activeTab !== 'Org Console' && (
                   <div className="flex flex-col items-center justify-center h-[50vh] text-center animate-in fade-in duration-500">
                     <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4 text-muted-foreground">
                       <Terminal className="w-8 h-8" />
