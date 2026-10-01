@@ -1,2 +1,2 @@
 ALTER TABLE payments
-ADD COLUMN organization_id UUID;
+ADD COLUMN IF NOT EXISTS organization_id UUID;
