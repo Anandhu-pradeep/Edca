@@ -2,9 +2,13 @@ spring:
   jpa:
     show-sql: true # Helpful for development
     hibernate:
-      ddl-auto: update
+      ddl-auto: none # Let Flyway handle all migrations, same as prod
 
   flyway:
     url: ${spring.datasource.url}
     user: ${spring.datasource.username}
     password: ${spring.datasource.password}
+
+app:
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:3001
