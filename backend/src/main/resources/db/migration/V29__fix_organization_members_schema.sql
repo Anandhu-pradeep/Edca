@@ -28,6 +28,9 @@ BEGIN
     IF EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_name = 'organization_members' AND column_name = 'joined_at'
+    ) AND NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'organization_members' AND column_name = 'created_at'
     ) THEN
         ALTER TABLE organization_members RENAME COLUMN joined_at TO created_at;
     ELSE
