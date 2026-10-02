@@ -3,7 +3,8 @@ import { useVideoStore } from '@/store/useVideoStore';
 
 const STUN_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' }
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun2.l.google.com:19302' },
 ];
 
 export function useWebRTC(sendMessage: (msg: any) => void, roomId: string) {
@@ -14,12 +15,16 @@ export function useWebRTC(sendMessage: (msg: any) => void, roomId: string) {
   const createPeerConnection = useCallback((peerId: string) => {
     // Configurable TURN via process.env if available
     const iceServers = [...STUN_SERVERS];
-    if (process.env.NEXT_PUBLIC_TURN_URL) {
-      iceServers.push({
-        urls: process.env.NEXT_PUBLIC_TURN_URL,
-        username: process.env.NEXT_PUBLIC_TURN_USERNAME || '',
-        credential: process.env.NEXT_PUBLIC_TURN_PASSWORD || '',
-      });
+    const turnUrl = process.env.NEXT_PUBLIC_TURN_URL;
+    const turnUser = process.env.NEXT_PUBLIC_TURN_USERNAME || '';
+    const turnPass = process.env.NEXT_PUBLIC_TURN_PASSWORD || '';
+    if (turnUrl) {
+      // Add TURN over UDP
+      iceServers.push({ urls: turnUrl, username: turnUser, credential: turnPass });
+      // Add TURN over TCP port 443 as fallback for strict NAT/firewalls
+      const turnHost = turnUrl.replace(/^turn:/, '').replace(/:\d+$/, '');
+      iceServers.push({ urls: `turn:${turnHost}:443?transport=tcp`, username: turnUser, credential: turnPass });
+      iceServers.push({ urls: `turns:${turnHost}:443`, username: turnUser, credential: turnPass });
     }
 
     const pc = new RTCPeerConnection({ iceServers });

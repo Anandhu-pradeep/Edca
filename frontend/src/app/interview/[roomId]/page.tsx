@@ -3,6 +3,7 @@
 import React, { useEffect, useState, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useVideoStore } from '@/store/useVideoStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useMedia } from '@/hooks/useMedia';
 import { useSocket } from '@/hooks/useSocket';
 import { useWebRTC } from '@/hooks/useWebRTC';
@@ -22,6 +23,9 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
   const unwrappedParams = use(params);
   const roomId = unwrappedParams.roomId;
 
+  // Wait for auth rehydration from IndexedDB before doing anything
+  const { isInitializing, isAuthenticated } = useAuthStore();
+
   const { connectionState, localStream, remoteStreams, participants, remoteVideoStates, remoteMicStates, isCameraOn, isMicOn } = useVideoStore();
   const { error: mediaError } = useMedia();
   // Delay connecting to WebSocket until localStream is acquired so WebRTC has tracks ready
@@ -34,6 +38,14 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
   const [hasSufficientCredits, setHasSufficientCredits] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Wait for auth to rehydrate from IndexedDB before calling API.
+    // Without this guard, on page refresh accessToken is null → 401 → logout.
+    if (isInitializing) return;
+    if (!isAuthenticated) {
+      router.replace('/sign?view=login');
+      return;
+    }
+
     let mounted = true;
     getCreditBalance().then(res => {
       if (mounted) {
@@ -50,7 +62,7 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
       if (mounted) setHasSufficientCredits(false);
     });
     return () => { mounted = false; };
-  }, []);
+  }, [isInitializing, isAuthenticated, router]);
 
   useEffect(() => {
     // Record the interview start in the database so it shows on the dashboard
@@ -149,12 +161,12 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
     );
   }
 
-  if (hasSufficientCredits === null || !localStream || connectionState === 'Waiting' || connectionState === 'Connecting') {
+  if (isInitializing || hasSufficientCredits === null || !localStream || connectionState === 'Waiting' || connectionState === 'Connecting') {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-background">
         <Loader2 className="w-10 h-10 animate-spin text-blue-500 mb-4" />
         <p className="text-muted-foreground text-lg font-medium animate-pulse">
-          {hasSufficientCredits === null ? 'Checking credit balance...' : (!localStream) ? 'Acquiring camera and microphone...' : `Joining room ${roomId}...`}
+          {isInitializing ? 'Restoring session...' : hasSufficientCredits === null ? 'Checking credit balance...' : (!localStream) ? 'Acquiring camera and microphone...' : `Joining room ${roomId}...`}
         </p>
       </div>
     );
