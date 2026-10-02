@@ -209,7 +209,7 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
             <VideoPlayer stream={stream} isCameraOn={remoteVideoStates[peerId] ?? true} isMicOn={remoteMicStates[peerId] ?? true} username={peerId} />
             <div className="absolute bottom-4 left-4 px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-white text-sm flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              User {peerId.substring(0, 5)}...
+              {peerId}
             </div>
           </div>
         ))}
