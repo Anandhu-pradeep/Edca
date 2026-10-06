@@ -32,11 +32,11 @@ export function InterviewsSection() {
     <div className="w-full max-w-5xl mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[70vh] animate-in fade-in duration-500">
       
       {/* Header Section */}
-      <div className="text-center mb-10 max-w-3xl">
-        <h1 className="text-4xl md:text-5xl font-bold font-heading mb-4 text-foreground tracking-tight">
+      <div className="text-center mb-8 sm:mb-10 max-w-3xl px-2">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold font-heading mb-3 sm:mb-4 text-foreground tracking-tight">
           Video calls and meetings for everyone
         </h1>
-        <p className="text-lg md:text-xl text-muted-foreground">
+        <p className="text-sm sm:text-lg md:text-xl text-muted-foreground">
           Connect, collaborate and celebrate from anywhere with EDCA Meet
         </p>
       </div>

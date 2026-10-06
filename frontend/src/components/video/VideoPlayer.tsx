@@ -12,6 +12,7 @@ interface VideoPlayerProps {
   isCameraOn?: boolean;
   isMicOn?: boolean;
   username?: string;
+  objectFit?: 'cover' | 'contain';
 }
 
 export function VideoPlayer({
@@ -22,6 +23,7 @@ export function VideoPlayer({
   isCameraOn = true,
   isMicOn = true,
   username = 'User',
+  objectFit = 'cover',
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const localUser = useAuthStore((state) => state.user);
@@ -91,7 +93,8 @@ export function VideoPlayer({
         playsInline
         muted={isLocal || isMuted}
         className={cn(
-          'w-full h-full object-cover transition-all duration-300',
+          'w-full h-full transition-all duration-300',
+          objectFit === 'contain' ? 'object-contain bg-black' : 'object-cover',
           isLocal && 'scale-x-[-1]', // Mirror local video
           !isCameraOn && 'hidden'     // Hide video when camera off but keep stream attached
         )}
@@ -99,8 +102,8 @@ export function VideoPlayer({
 
       {/* Avatar overlay shown when camera is off */}
       {!isCameraOn && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-          <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-blue-600 flex items-center justify-center shadow-2xl border-4 border-slate-700 overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-800 p-4">
+          <div className="w-16 h-16 sm:w-28 sm:h-28 md:w-36 md:h-36 rounded-full bg-blue-600 flex items-center justify-center shadow-2xl border-2 sm:border-4 border-slate-700 overflow-hidden">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
@@ -110,7 +113,7 @@ export function VideoPlayer({
                 onError={() => setAvatarUrl(null)}
               />
             ) : (
-              <span className="text-5xl md:text-6xl text-white font-bold">{initial}</span>
+              <span className="text-2xl sm:text-4xl md:text-5xl text-white font-bold">{initial}</span>
             )}
           </div>
         </div>
@@ -118,8 +121,8 @@ export function VideoPlayer({
 
       {/* Mic off indicator */}
       {!isMicOn && (
-        <div className="absolute top-4 right-4 bg-red-500/90 backdrop-blur text-white p-2 rounded-full shadow-lg animate-in fade-in zoom-in">
-          <MicOff className="w-5 h-5" />
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-red-500/90 backdrop-blur text-white p-1.5 sm:p-2 rounded-full shadow-lg animate-in fade-in zoom-in">
+          <MicOff className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
       )}
     </div>
