@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface OrganizationInterviewAssignmentRepository extends JpaRepository<OrganizationInterviewAssignment, UUID> {
     List<OrganizationInterviewAssignment> findByOrganizationId(UUID organizationId);
     List<OrganizationInterviewAssignment> findByOrgClassId(UUID orgClassId);
+    boolean existsByInterviewId(UUID interviewId);
+    java.util.Optional<OrganizationInterviewAssignment> findByInterviewId(UUID interviewId);
 }

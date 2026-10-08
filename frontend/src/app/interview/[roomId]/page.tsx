@@ -25,7 +25,7 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
   const roomId = unwrappedParams.roomId;
 
   // Wait for auth rehydration from IndexedDB before doing anything
-  const { isInitializing, isAuthenticated } = useAuthStore();
+  const { isInitializing, isAuthenticated, activeOrganization } = useAuthStore();
 
   const { connectionState, localStream, remoteStreams, participants, remoteVideoStates, remoteMicStates, isCameraOn, isMicOn } = useVideoStore();
   const { error: mediaError } = useMedia();
@@ -37,6 +37,7 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
   
   const interviewIdRef = useRef<string | null>(null);
   const [hasSufficientCredits, setHasSufficientCredits] = useState<boolean | null>(null);
+  const [isOrgInterview, setIsOrgInterview] = useState<boolean>(false);
 
   // Responsive video call layout state
   const [layoutMode, setLayoutMode] = useState<'pip' | 'split'>('pip');
@@ -71,27 +72,70 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
     }
 
     let mounted = true;
-    getCreditBalance().then(res => {
-      if (mounted) {
-        if (res.balance < 10) {
-          setHasSufficientCredits(false);
-          toast.error("Insufficient credits to start the interview. Please top up.", { id: "credits" });
-        } else {
+
+    const checkInterviewAndCredits = async () => {
+      try {
+        const { axiosInstance } = await import('@/lib/axios');
+        let orgManaged = !!activeOrganization;
+
+        // Check if the interview was already scheduled in DB for this roomId
+        try {
+          const res = await axiosInstance.get(`/interviews/room/${roomId}`);
+          if (res.data?.data) {
+            interviewIdRef.current = res.data.data.id;
+            if (res.data.data.isOrgInterview) {
+              orgManaged = true;
+            }
+          }
+        } catch {
+          // Normal ad-hoc interview room or not yet in DB
+        }
+
+        if (!mounted) return;
+
+        if (orgManaged) {
+          // Organization controls all credits! Students do not require personal credits.
+          setIsOrgInterview(true);
           setHasSufficientCredits(true);
+          return;
+        }
+
+        // For non-organization personal interviews, verify personal wallet credits
+        getCreditBalance().then(res => {
+          if (mounted) {
+            if (res.balance < 10) {
+              setHasSufficientCredits(false);
+              toast.error("Insufficient credits to start the interview. Please top up.", { id: "credits" });
+            } else {
+              setHasSufficientCredits(true);
+            }
+          }
+        }).catch(err => {
+          console.error("Failed to fetch credits", err);
+          if (mounted) setHasSufficientCredits(false);
+        });
+      } catch (err) {
+        console.error("Failed to verify interview or credits", err);
+        if (mounted) {
+          if (activeOrganization) {
+            setIsOrgInterview(true);
+            setHasSufficientCredits(true);
+          } else {
+            setHasSufficientCredits(false);
+          }
         }
       }
-    }).catch(err => {
-      console.error("Failed to fetch credits", err);
-      // Fallback: allow to proceed or fail. We'll fail safe.
-      if (mounted) setHasSufficientCredits(false);
-    });
+    };
+
+    checkInterviewAndCredits();
+
     return () => { mounted = false; };
-  }, [isInitializing, isAuthenticated, router]);
+  }, [isInitializing, isAuthenticated, router, roomId, activeOrganization]);
 
   useEffect(() => {
-    // Record the interview start in the database so it shows on the dashboard
+    // Record interview start in DB only if not already pre-created
     let mounted = true;
-    if (hasSufficientCredits === true) {
+    if (hasSufficientCredits === true && !interviewIdRef.current) {
       import('@/lib/axios').then(({ axiosInstance }) => {
         axiosInstance.post('/interviews', {
           role: 'Mock Interview (Video Call)',
@@ -124,8 +168,9 @@ export default function InterviewRoom({ params }: { params: Promise<{ roomId: st
         
         axiosInstance.put(`/interviews/${interviewIdRef.current}/complete?grade=${mockGrade}&durationMinutes=${mockDuration}`)
           .then(() => {
-            // Deduct credits after successful completion
-            if (interviewIdRef.current) {
+            // Deduct credits after successful completion ONLY for individual interviews
+            // Organization interviews are paid upfront by the organization wallet!
+            if (interviewIdRef.current && !isOrgInterview && !activeOrganization) {
                 consumeInterviewCredits(interviewIdRef.current).catch(err => console.error("Failed to deduct credits", err));
             }
           })

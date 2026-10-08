@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Users, UserPlus, FileUp, MoreVertical, Plus } from 'lucide-react';
@@ -9,9 +9,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
-export function OrganizationMembersView() {
+interface OrganizationMembersViewProps {
+  initialTab?: 'classes' | 'members';
+  openScheduleModal?: boolean;
+}
+
+export function OrganizationMembersView({
+  initialTab = 'classes',
+  openScheduleModal = false,
+}: OrganizationMembersViewProps) {
   const { activeOrganization } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'classes' | 'members'>('classes');
+  const [activeTab, setActiveTab] = useState<'classes' | 'members'>(initialTab);
   
   const [viewingClass, setViewingClass] = useState<any | null>(null);
   
@@ -29,6 +37,17 @@ export function OrganizationMembersView() {
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [scheduleRole, setScheduleRole] = useState('');
   const [isScheduling, setIsScheduling] = useState(false);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+    setViewingClass(null);
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (openScheduleModal) {
+      setIsScheduleModalOpen(true);
+    }
+  }, [openScheduleModal]);
 
   const [isAssignClassModalOpen, setIsAssignClassModalOpen] = useState(false);
   const [memberToAssign, setMemberToAssign] = useState<any>(null);
@@ -286,6 +305,23 @@ export function OrganizationMembersView() {
                 <DialogTitle>Schedule Interviews for Class</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleScheduleInterviews} className="space-y-4 py-4">
+                {!selectedClassId && (
+                  <div className="space-y-2">
+                    <Label htmlFor="classSelect">Select Class</Label>
+                    <select
+                      id="classSelect"
+                      value={selectedClassId || ''}
+                      onChange={(e) => setSelectedClassId(e.target.value)}
+                      className="w-full p-2.5 rounded-lg bg-background border border-border text-sm"
+                      required
+                    >
+                      <option value="">-- Choose Class --</option>
+                      {(classes || []).map((c: any) => (
+                        <option key={c.id} value={c.id}>{c.name} ({c.studentCount} students)</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="targetRole">Target Role</Label>
                   <Input 

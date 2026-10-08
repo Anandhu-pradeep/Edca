@@ -135,4 +135,16 @@ public class OrgClassService {
             classMembershipRepository.save(membership);
         }
     }
+
+    @Transactional(readOnly = true)
+    public List<OrgClassDto> getMyEnrolledClasses(UUID organizationId, UUID studentId) {
+        return classMembershipRepository.findByUserId(studentId).stream()
+                .map(ClassMembership::getOrgClass)
+                .filter(c -> c.getOrganization().getId().equals(organizationId))
+                .map(c -> {
+                    int count = classMembershipRepository.findByOrgClassId(c.getId()).size();
+                    return mapToDto(c, count);
+                })
+                .collect(Collectors.toList());
+    }
 }

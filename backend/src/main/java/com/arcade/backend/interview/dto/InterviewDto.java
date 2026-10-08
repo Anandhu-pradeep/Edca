@@ -25,5 +25,6 @@ public class InterviewDto {
     private String status;
     private String grade;
     private String feedback;
+    private Boolean isOrgInterview;
     private ZonedDateTime createdAt;
 }

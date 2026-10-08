@@ -31,7 +31,7 @@ public class OrgInterviewService {
     private final OrganizationCreditService creditService;
 
     @Transactional
-    public void scheduleClassInterviews(UUID organizationId, UUID classId, String role, User interviewer) {
+    public void scheduleClassInterviews(UUID organizationId, UUID classId, String role, ZonedDateTime scheduledAt, User interviewer) {
         Organization organization = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new IllegalArgumentException("Organization not found"));
 
@@ -56,7 +56,7 @@ public class OrgInterviewService {
                     .interviewee(student.getUser())
                     .role(role)
                     .status("SCHEDULED")
-                    .scheduledAt(ZonedDateTime.now())
+                    .scheduledAt(scheduledAt != null ? scheduledAt : ZonedDateTime.now())
                     .build();
             
             interview = interviewRepository.save(interview);
@@ -71,5 +71,23 @@ public class OrgInterviewService {
 
             assignmentRepository.save(assignment);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<com.arcade.backend.organization.dto.StudentAssignedInterviewDto> getMyAssignedInterviews(UUID organizationId, UUID studentId) {
+        return assignmentRepository.findByOrganizationId(organizationId).stream()
+                .filter(a -> a.getInterview().getInterviewee().getId().equals(studentId))
+                .map(a -> com.arcade.backend.organization.dto.StudentAssignedInterviewDto.builder()
+                        .assignmentId(a.getId())
+                        .interviewId(a.getInterview().getId())
+                        .roomId(a.getInterview().getRoomId())
+                        .role(a.getInterview().getRole())
+                        .className(a.getOrgClass() != null ? a.getOrgClass().getName() : "General")
+                        .status(a.getInterview().getStatus())
+                        .scheduledAt(a.getInterview().getScheduledAt())
+                        .grade(a.getInterview().getGrade())
+                        .durationMinutes(a.getInterview().getDurationMinutes())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
     }
 }

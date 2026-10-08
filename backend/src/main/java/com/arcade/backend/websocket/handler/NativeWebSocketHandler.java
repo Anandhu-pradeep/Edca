@@ -83,9 +83,13 @@ public class NativeWebSocketHandler extends TextWebSocketHandler {
         boolean joined = roomManager.joinRoom(roomId, username);
         
         if (!joined) {
-          // Send room-not-found or full to the user
-          sessionManager.sendEventToUser(username, "room-not-found", null);
-          return;
+          // If room doesn't exist yet (e.g. pre-assigned interview session), auto-create and join it
+          boolean created = roomManager.createRoom(roomId, username);
+          if (!created) {
+            // Still couldn't join or create (e.g. room is full)
+            sessionManager.sendEventToUser(username, "room-not-found", null);
+            return;
+          }
         }
         
         Set<String> participants = roomManager.getParticipants(roomId);

@@ -20,6 +20,7 @@ import java.util.UUID;
 public class OrgClassController {
 
     private final OrgClassService orgClassService;
+    private final com.arcade.backend.organization.service.OrganizationService organizationService;
 
     @PostMapping
     public ResponseEntity<OrgClassDto> createClass(
@@ -27,7 +28,7 @@ public class OrgClassController {
             @Valid @RequestBody CreateClassRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
-        // TODO: Validate that userDetails.getId() is an admin of organizationId
+        organizationService.validateOrgAdmin(organizationId, userDetails.getId());
         return ResponseEntity.ok(orgClassService.createClass(organizationId, request));
     }
 
@@ -36,8 +37,17 @@ public class OrgClassController {
             @PathVariable UUID organizationId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
-        // TODO: Validate that userDetails.getId() is a member of organizationId
+        organizationService.validateOrgMember(organizationId, userDetails.getId());
         return ResponseEntity.ok(orgClassService.getOrganizationClasses(organizationId));
+    }
+
+    @GetMapping("/my-enrolled")
+    public ResponseEntity<List<OrgClassDto>> getMyEnrolledClasses(
+            @PathVariable UUID organizationId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        organizationService.validateOrgMember(organizationId, userDetails.getId());
+        return ResponseEntity.ok(orgClassService.getMyEnrolledClasses(organizationId, userDetails.getId()));
     }
 
     @GetMapping("/{classId}/students")
@@ -46,6 +56,7 @@ public class OrgClassController {
             @PathVariable UUID classId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
+        organizationService.validateOrgMember(organizationId, userDetails.getId());
         return ResponseEntity.ok(orgClassService.getClassStudents(classId));
     }
 
@@ -56,6 +67,7 @@ public class OrgClassController {
             @PathVariable UUID studentId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
+        organizationService.validateOrgAdmin(organizationId, userDetails.getId());
         orgClassService.addStudentToClass(classId, studentId);
         return ResponseEntity.ok().build();
     }
@@ -67,6 +79,7 @@ public class OrgClassController {
             @PathVariable UUID studentId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
+        organizationService.validateOrgAdmin(organizationId, userDetails.getId());
         orgClassService.removeStudentFromClass(classId, studentId);
         return ResponseEntity.ok().build();
     }

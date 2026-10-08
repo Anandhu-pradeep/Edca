@@ -25,7 +25,7 @@ public class OrganizationController {
     public ResponseEntity<List<com.arcade.backend.organization.dto.OrgMemberDto>> getOrganizationMembers(
             @PathVariable java.util.UUID organizationId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        // TODO: Validate that userDetails.getId() is a member
+        organizationService.validateOrgMember(organizationId, userDetails.getId());
         return ResponseEntity.ok(organizationService.getOrganizationMembers(organizationId));
     }
 
@@ -34,7 +34,7 @@ public class OrganizationController {
             @PathVariable java.util.UUID organizationId,
             @jakarta.validation.Valid @RequestBody com.arcade.backend.organization.dto.InviteMemberRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        // TODO: Validate that userDetails.getId() is an admin
+        organizationService.validateOrgAdmin(organizationId, userDetails.getId());
         organizationService.inviteMember(organizationId, request);
         return ResponseEntity.ok().build();
     }
@@ -44,7 +44,7 @@ public class OrganizationController {
             @PathVariable java.util.UUID organizationId,
             @PathVariable java.util.UUID userId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        // TODO: Validate that userDetails.getId() is an admin
+        organizationService.validateOrgAdmin(organizationId, userDetails.getId());
         organizationService.removeMember(organizationId, userId);
         return ResponseEntity.ok().build();
     }

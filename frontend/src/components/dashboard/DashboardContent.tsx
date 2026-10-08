@@ -59,6 +59,9 @@ import { useQuery } from '@tanstack/react-query';
 import { getCreditBalance } from '@/lib/credit';
 import BuyCreditsPage from '@/app/credits/page';
 import { OrganizationCreditsView } from './OrganizationCreditsView';
+import { OrganizationClassesView } from './OrganizationClassesView';
+import { OrganizationStudentsView } from './OrganizationStudentsView';
+import { OrganizationScheduleView } from './OrganizationScheduleView';
 import { OrganizationMembersView } from './OrganizationMembersView';
 import { OrganizationReportsView } from './OrganizationReportsView';
 import { OrganizationDashboardView } from './OrganizationDashboardView';
@@ -138,6 +141,13 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
       setActiveOrganization(null);
     }
   }, [organizations, activeOrganization, setActiveOrganization]);
+
+  // If role is STUDENT, ensure they don't stay on the restricted Students/Members tab
+  useEffect(() => {
+    if (activeOrganization?.role === 'STUDENT' && (activeTab === 'Students' || activeTab === 'Members')) {
+      setActiveTab('Dashboard');
+    }
+  }, [activeOrganization, activeTab]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -230,11 +240,12 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
   if (activeOrganization) {
     // Organization Workspace Navigation
     const isOrgAdmin = activeOrganization.role === 'OWNER' || activeOrganization.role === 'ADMIN';
+    const isStudent = activeOrganization.role === 'STUDENT';
     
     sidebarItems = [
       { label: 'Dashboard', icon: Home, badge: 0 },
       { label: 'Classes', icon: Book, badge: 0 },
-      { label: 'Students', icon: Users, badge: 0 },
+      ...(!isStudent ? [{ label: 'Students', icon: Users, badge: 0 }] : []),
       { label: 'Interviews', icon: Video, badge: 0 },
       { label: 'Reports', icon: LineChartIcon, badge: 0 },
     ];
@@ -242,8 +253,7 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
     if (isOrgAdmin) {
       sidebarItems.push(
         { label: 'Schedule', icon: Calendar, badge: 0 },
-        { label: 'Credits', icon: Target, badge: 0 },
-        { label: 'Members', icon: Shield, badge: 0 }
+        { label: 'Credits', icon: Target, badge: 0 }
       );
     }
   } else {
@@ -670,8 +680,14 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
               children
             ) : (
               <>
-                {activeTab === 'Members' && activeOrganization && (
-                  <OrganizationMembersView />
+                {activeTab === 'Classes' && activeOrganization && (
+                  <OrganizationClassesView onScheduleInterview={() => setActiveTab('Schedule')} />
+                )}
+                {(activeTab === 'Students' || activeTab === 'Members') && activeOrganization && activeOrganization.role !== 'STUDENT' && (
+                  <OrganizationStudentsView />
+                )}
+                {activeTab === 'Schedule' && activeOrganization && (
+                  <OrganizationScheduleView />
                 )}
                 {activeTab === 'Reports' && activeOrganization && (
                   <OrganizationReportsView />
@@ -680,7 +696,10 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
                   <OrganizationCreditsView />
                 )}
                 {activeTab === 'Dashboard' && activeOrganization && (
-                  <OrganizationDashboardView />
+                  <OrganizationDashboardView onNavigate={(tab) => {
+                    const normalized = tab.charAt(0).toUpperCase() + tab.slice(1);
+                    setActiveTab(normalized);
+                  }} />
                 )}
                 {activeTab === 'Dashboard' && !activeOrganization && (
                   <div className="space-y-6 animate-in fade-in duration-500">
@@ -776,7 +795,13 @@ export function DashboardContent({ children, activeTabOverride }: { children?: R
                   <OrganizationConsoleView />
                 )}
                 
-                {activeTab !== 'Dashboard' && activeTab !== 'Interviews' && activeTab !== 'Audience' && activeTab !== 'Assign Roles' && activeTab !== 'Credits & Billing' && activeTab !== 'Org Console' && (
+                {activeTab !== 'Dashboard' && 
+                 activeTab !== 'Interviews' && 
+                 activeTab !== 'Audience' && 
+                 activeTab !== 'Assign Roles' && 
+                 activeTab !== 'Credits & Billing' && 
+                 activeTab !== 'Org Console' && 
+                 !(activeOrganization && ['Classes', 'Students', 'Members', 'Schedule', 'Reports', 'Credits'].includes(activeTab)) && (
                   <div className="flex flex-col items-center justify-center h-[50vh] text-center animate-in fade-in duration-500">
                     <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4 text-muted-foreground">
                       <Terminal className="w-8 h-8" />

@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface InterviewRepository extends JpaRepository<Interview, UUID> {
     List<Interview> findByIntervieweeIdOrderByCreatedAtDesc(UUID intervieweeId);
     List<Interview> findByInterviewerIdOrderByCreatedAtDesc(UUID interviewerId);
+    java.util.Optional<Interview> findByRoomId(String roomId);
 }

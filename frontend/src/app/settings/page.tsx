@@ -7,6 +7,7 @@ import { wsClient } from '@/lib/websocket';
 import { Laptop, Smartphone, Globe, LogOut, Loader2, User, Shield, Sliders, AlertTriangle, Trash2, ShieldCheck, ArrowLeft, Briefcase, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import ChangePasswordForm from "@/components/settings/ChangePasswordForm";
 import ThemePreferences from "@/components/settings/ThemePreferences";
 import RedeemCodeForm from "@/components/settings/RedeemCodeForm";
@@ -27,8 +28,29 @@ export default function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
   
   const user = useAuthStore(state => state.user);
+  const activeOrganization = useAuthStore(state => state.activeOrganization);
   const logout = useAuthStore(state => state.logout);
   const router = useRouter();
+
+  const { data: myOrganizations } = useQuery({
+    queryKey: ['myOrganizations'],
+    queryFn: async () => {
+      const res = await axiosInstance.get('/organizations/my');
+      return res.data;
+    },
+    enabled: !!user,
+  });
+
+  const isPartOfOrg = Boolean(
+    activeOrganization || 
+    (myOrganizations && myOrganizations.length > 0) || 
+    user?.roles?.includes('ROLE_ORGANIZATION')
+  );
+
+  const isOrgStudent = Boolean(
+    activeOrganization?.role === 'STUDENT' ||
+    myOrganizations?.some((org: any) => org.role === 'STUDENT')
+  );
 
   useEffect(() => {
     if (!user) {
@@ -165,21 +187,23 @@ export default function SettingsPage() {
                     <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
 
-                  <div 
-                    onClick={() => router.push('/settings/organization')}
-                    className="p-4 rounded-xl cursor-pointer hover:bg-secondary/40 transition-colors flex items-center justify-between group"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-blue-500/10 rounded-full text-blue-500 shrink-0">
-                        <Briefcase className="w-6 h-6" />
+                  {!isPartOfOrg && (
+                    <div 
+                      onClick={() => router.push('/settings/organization')}
+                      className="p-4 rounded-xl cursor-pointer hover:bg-secondary/40 transition-colors flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-blue-500/10 rounded-full text-blue-500 shrink-0">
+                          <Briefcase className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-medium mb-1 group-hover:text-blue-500 transition-colors">Organization Account</h3>
+                          <p className="text-xs text-muted-foreground">Upgrade your account to access enterprise features and manage teams.</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-base font-medium mb-1 group-hover:text-blue-500 transition-colors">Organization Account</h3>
-                        <p className="text-xs text-muted-foreground">Upgrade your account to access enterprise features and manage teams.</p>
-                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-blue-500 transition-colors" />
                     </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-blue-500 transition-colors" />
-                  </div>
+                  )}
                 </div>
               </div>
             )}
@@ -206,7 +230,7 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                {(!user?.roles?.includes('ROLE_ORGANIZATION')) && (
+                {(!user?.roles?.includes('ROLE_ORGANIZATION') && !isOrgStudent) && (
                   <RedeemCodeForm />
                 )}
 

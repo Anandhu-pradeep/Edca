@@ -10,12 +10,30 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { axiosInstance } from '@/lib/axios';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function OrganizationPage() {
   const router = useRouter();
+  const user = useAuthStore(state => state.user);
+  const activeOrganization = useAuthStore(state => state.activeOrganization);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const { data: myOrgs, isLoading: isLoadingOrgs } = useQuery({
+    queryKey: ['myOrganizations'],
+    queryFn: async () => {
+      const res = await axiosInstance.get('/organizations/my');
+      return res.data;
+    },
+    enabled: !!user,
+  });
+
+  const isAlreadyInOrg = Boolean(
+    activeOrganization || 
+    (myOrgs && myOrgs.length > 0) || 
+    user?.roles?.includes('ROLE_ORGANIZATION')
+  );
 
   const { data: myRequests, isLoading: isLoadingRequests } = useQuery({
     queryKey: ['myOrganizationRequests'],
@@ -66,10 +84,46 @@ export default function OrganizationPage() {
     }
   };
 
-  if (isLoadingRequests) {
+  if (isLoadingRequests || isLoadingOrgs) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isAlreadyInOrg) {
+    const orgName = activeOrganization?.name || myOrgs?.[0]?.name || 'an active organization';
+    return (
+      <div className="min-h-screen bg-transparent p-4 md:p-8">
+        <div className="max-w-4xl mx-auto w-full flex flex-col">
+          <div className="flex items-center gap-4 mb-8 shrink-0">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => router.push('/settings')}
+              className="rounded-full liquid-glass-subtle shrink-0 hover:bg-secondary/80"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h1 className="text-3xl font-bold font-heading">Organization Account</h1>
+          </div>
+          
+          <div className="flex-1 pb-16 animate-in fade-in duration-300">
+            <div className="liquid-glass p-8 md:p-16 text-center flex flex-col items-center justify-center min-h-[500px]">
+              <div className="w-20 h-20 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mb-6">
+                <Building2 className="w-10 h-10" />
+              </div>
+              <h3 className="text-3xl font-bold text-foreground mb-4">Already Enrolled</h3>
+              <p className="text-muted-foreground max-w-lg mx-auto mb-8 text-base">
+                You are already a member of <strong>{orgName}</strong>. Accounts associated with an active organization cannot register another organization.
+              </p>
+              <Button onClick={() => router.push('/settings')}>
+                Return to Settings
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

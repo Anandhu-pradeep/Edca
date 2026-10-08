@@ -80,6 +80,22 @@ public class InterviewController {
                         .path(request.getRequestURI())
                         .build());
     }
+
+    @GetMapping("/room/{roomId}")
+    public ResponseEntity<ApiResponse<InterviewDto>> getInterviewByRoomId(
+            @PathVariable String roomId,
+            HttpServletRequest request) {
+        InterviewDto interview = interviewService.getInterviewByRoomId(roomId);
+        return ResponseEntity.ok(
+                ApiResponse.<InterviewDto>builder()
+                        .status(HttpStatus.OK.value())
+                        .code("INTERVIEW_FOUND")
+                        .message("Interview retrieved successfully.")
+                        .data(interview)
+                        .path(request.getRequestURI())
+                        .build());
+    }
+
     @GetMapping("/test-create")
     public ResponseEntity<String> testCreate() {
         try {

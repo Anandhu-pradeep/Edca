@@ -190,4 +190,20 @@ public class OrganizationService {
             );
         }
     }
+
+    public void validateOrgAdmin(UUID organizationId, UUID userId) {
+        com.arcade.backend.organization.entity.OrganizationMember member = memberRepository.findByOrganizationIdAndUserId(organizationId, userId)
+                .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("You are not a member of this organization."));
+        if (!member.isActive() || (member.getRole() != com.arcade.backend.organization.enums.OrgRoleType.OWNER && member.getRole() != com.arcade.backend.organization.enums.OrgRoleType.ADMIN)) {
+            throw new org.springframework.security.access.AccessDeniedException("Only organization admins or owners can perform this action.");
+        }
+    }
+
+    public void validateOrgMember(UUID organizationId, UUID userId) {
+        com.arcade.backend.organization.entity.OrganizationMember member = memberRepository.findByOrganizationIdAndUserId(organizationId, userId)
+                .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("You are not a member of this organization."));
+        if (!member.isActive()) {
+            throw new org.springframework.security.access.AccessDeniedException("Your membership in this organization is inactive.");
+        }
+    }
 }

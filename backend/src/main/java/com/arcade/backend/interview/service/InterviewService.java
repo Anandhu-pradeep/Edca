@@ -22,6 +22,7 @@ public class InterviewService {
 
     private final InterviewRepository interviewRepository;
     private final UserRepository userRepository;
+    private final com.arcade.backend.organization.repository.OrganizationInterviewAssignmentRepository assignmentRepository;
 
     public UserRepository getUserRepository() {
         return userRepository;
@@ -55,6 +56,13 @@ public class InterviewService {
         interview.setDurationMinutes(durationMinutes);
         
         return mapToDto(interviewRepository.save(interview));
+    }
+
+    @Transactional(readOnly = true)
+    public InterviewDto getInterviewByRoomId(String roomId) {
+        Interview interview = interviewRepository.findByRoomId(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Interview not found with roomId: " + roomId));
+        return mapToDto(interview);
     }
 
     @Transactional(readOnly = true)
@@ -175,6 +183,7 @@ public class InterviewService {
                 .status(interview.getStatus())
                 .grade(interview.getGrade())
                 .feedback(interview.getFeedback())
+                .isOrgInterview(assignmentRepository.existsByInterviewId(interview.getId()))
                 .createdAt(interview.getCreatedAt())
                 .build();
     }

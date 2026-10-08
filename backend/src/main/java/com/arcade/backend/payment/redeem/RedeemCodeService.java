@@ -27,6 +27,7 @@ public class RedeemCodeService {
     private final RedeemCodeRepository redeemCodeRepository;
     private final RedeemCodeRedemptionRepository redemptionRepository;
     private final CreditService creditService;
+    private final com.arcade.backend.organization.repository.OrganizationMemberRepository memberRepository;
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String ALLOWED_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excluded O, 0, I, 1
@@ -52,6 +53,10 @@ public class RedeemCodeService {
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public Long redeemCode(String plaintextCode, User user) {
+        if (memberRepository.findByUserId(user.getId()).stream().anyMatch(m -> m.isActive() && m.getRole() == com.arcade.backend.organization.enums.OrgRoleType.STUDENT)) {
+            throw new IllegalArgumentException("Organization students cannot redeem personal credit codes.");
+        }
+
         String codeHash = hash(plaintextCode);
         RedeemCode redeemCode = redeemCodeRepository.findByCodeHash(codeHash)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid or unavailable redeem code."));
