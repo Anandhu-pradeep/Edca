@@ -314,9 +314,10 @@ export default function SettingsPage() {
                                 setDeleting(true);
                                 await axiosInstance.post(`/organizations/${useAuthStore.getState().activeOrganization?.id}/request-deletion`);
                                 alert("Deletion request sent to super admin.");
-                              } catch(e) {
+                              } catch(e: any) {
                                 console.error(e);
-                                alert("Failed to send request.");
+                                const msg = e?.response?.data?.message || e?.response?.data?.error || "Failed to send request.";
+                                alert(msg);
                               } finally {
                                 setDeleting(false);
                               }
