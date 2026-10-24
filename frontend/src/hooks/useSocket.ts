@@ -10,8 +10,21 @@ export function useSocket(roomId: string | null, action: string | null = 'join')
   useEffect(() => {
     if (!roomId || !accessToken) return;
 
-    // Use environment variable or fallback to localhost
-    const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080/ws/v1/events';
+    // Dynamically resolve WebSocket URL if NEXT_PUBLIC_WS_URL is not provided
+    const getWsUrl = () => {
+      if (process.env.NEXT_PUBLIC_WS_URL) {
+        return process.env.NEXT_PUBLIC_WS_URL;
+      }
+      if (typeof window !== 'undefined') {
+        const isHttps = window.location.protocol === 'https:';
+        const host = process.env.NEXT_PUBLIC_WS_HOST || (isHttps ? 'api.anandhupradeep.com' : 'localhost:8080');
+        const protocol = isHttps ? 'wss:' : 'ws:';
+        return `${protocol}//${host}/ws/v1/events`;
+      }
+      return 'ws://localhost:8080/ws/v1/events';
+    };
+
+    const WS_URL = getWsUrl();
     const ws = new WebSocket(`${WS_URL}?token=${accessToken}`);
     socketRef.current = ws;
 
